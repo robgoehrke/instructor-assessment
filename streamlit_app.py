@@ -208,6 +208,7 @@ if 'step' not in st.session_state:
     st.session_state.verification_queue = []
     st.session_state.q_count = 0
     st.session_state.show_feedback = False 
+    st.session_state.pending_choice = None
 
 # Screen 1: Candidate Info
 if st.session_state.step == 'candidate_info':
@@ -311,14 +312,19 @@ elif st.session_state.step == 'testing':
     if not st.session_state.show_feedback:
         st.write(f"**(Level {int(current_q['diff'])})** {current_q['q']}")
         
-        for idx, opt in enumerate(current_q['opts']):
+        # Add the 'I don't know' option dynamically just for the buttons
+        display_options = current_q['opts'] + ["I don't know"]
+        
+        for idx, opt in enumerate(display_options):
             if st.button(opt, use_container_width=True):
+                # The 'I don't know' button will naturally fail this check and register as 0 (incorrect)
                 is_correct = 1 if idx == current_q['ans'] else 0
                 
                 # Save answer data temporarily
                 st.session_state.pending_b = current_q['diff']
                 st.session_state.pending_r = is_correct
                 st.session_state.pending_q = current_q
+                st.session_state.pending_choice = opt
                 st.session_state.correct_text = current_q['opts'][current_q['ans']]
                 
                 # Trigger feedback screen
@@ -328,9 +334,12 @@ elif st.session_state.step == 'testing':
     else:
         st.write(current_q['q'])
         
-        # Display the feedback
+        # Display the custom feedback
         if st.session_state.pending_r == 1:
             st.success(f"**Correct!** That was a Level {int(current_q['diff'])} question.")
+        elif st.session_state.pending_choice == "I don't know":
+            st.warning(f"**No worries.** That was a Level {int(current_q['diff'])} question.")
+            st.info(f"For your knowledge, the correct answer is: **{st.session_state.correct_text}**")
         else:
             st.error(f"**Incorrect.** That was a Level {int(current_q['diff'])} question.")
             st.info(f"The correct answer was: **{st.session_state.correct_text}**")
