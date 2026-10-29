@@ -1,6 +1,7 @@
 import streamlit as st
 import math
-import urllib.parse
+import tempfile
+from fpdf import FPDF
 
 # --- 1. IRT Probability & Estimation Models (Book-Scaled) ---
 def irt_probability(theta, b):
@@ -10,7 +11,7 @@ def irt_probability(theta, b):
         return 0.0 if (theta - b) < 0 else 1.0
 
 def estimate_ability(administered_b, responses, prior_mean):
-    best_theta = prior_mean # Center gravity at the candidate's self-estimate
+    best_theta = prior_mean 
     max_ll = -float('inf')
     
     for t in range(0, 81):
@@ -30,7 +31,38 @@ def estimate_ability(administered_b, responses, prior_mean):
             
     return best_theta
 
-# --- 2. Full Question Bank (All Instruments & Levels) ---
+# --- 2. PDF Generation Function ---
+def create_pdf(name, location, instrument, rec, score, q_count):
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Title
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(0, 10, "Instructor Assessment Results", ln=True, align="C")
+    pdf.ln(10)
+    
+    # Candidate Info
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, f"Candidate Name: {name}", ln=True)
+    pdf.cell(0, 10, f"Interviewing at: School of Rock {location}", ln=True)
+    pdf.cell(0, 10, f"Instrument: {instrument}", ln=True)
+    pdf.ln(5)
+    
+    # Results
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, f"Recommended Level: {rec}", ln=True)
+    
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(0, 10, f"Estimated Score: {score:.2f}", ln=True)
+    pdf.cell(0, 10, f"Total Questions Answered: {q_count}", ln=True)
+    
+    # Save to a temporary string to download
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        pdf.output(tmp.name)
+        with open(tmp.name, "rb") as f:
+            return f.read()
+
+# --- 3. Full Question Bank (All Instruments & Levels) ---
 QUESTIONS = [
     # ---------------- GUITAR ----------------
     # Book 2
@@ -193,7 +225,7 @@ QUESTIONS = [
     {"inst": "Vocals", "diff": 6.0, "ans": 2, "q": "Vocalese is a style of signing where:", "opts": ["The vocal parts are totally improvised.", "It is always acapella.", "The vocal parts are actual transcriptions of solos and sung note for note using lyrics.", "Nonsensical words are sung."]}
 ]
 
-# --- 3. Web Interface UI ---
+# --- 4. Web Interface UI ---
 st.set_page_config(page_title="Instructor Assessment", page_icon="🎸")
 st.title("Instructor Assessment")
 
@@ -245,7 +277,6 @@ elif st.session_state.step == 'choose_instrument':
     
     if st.button("Start Assessment", use_container_width=True):
         st.session_state.instrument = selected_inst
-        # Anchor the math to their self-assessment
         st.session_state.initial_theta = float(self_estimate)
         st.session_state.theta = float(self_estimate)
         st.session_state.pool = [q for q in QUESTIONS if q['inst'] == selected_inst]
@@ -255,10 +286,8 @@ elif st.session_state.step == 'choose_instrument':
 # Screen 3: Three-Phase Testing with Feedback
 elif st.session_state.step == 'testing':
     
-    # 1. Transition Checks (Only run when NOT showing feedback)
     if not st.session_state.show_feedback:
         
-        # Adaptive -> Target Verification
         if st.session_state.phase == 'adaptive' and (st.session_state.q_count >= 7 or not st.session_state.pool):
             st.session_state.phase = 'verification_target'
             
@@ -276,7 +305,6 @@ elif st.session_state.step == 'testing':
             
             st.session_state.verification_queue = [q for q in target_qs if q['q'] not in asked_texts]
 
-        # Target Verification -> Prior Verification
         if st.session_state.phase == 'verification_target' and not st.session_state.verification_queue:
             st.session_state.phase = 'verification_prior'
             target_diff = st.session_state.target_diff
@@ -292,7 +320,6 @@ elif st.session_state.step == 'testing':
                 
                 asked_second_count = sum(1 for q in st.session_state.asked_questions if q['diff'] == second_diff)
                 
-                # THE 80% LOGIC
                 if target_total > 0 and (target_correct / target_total) < 0.8:
                     needed = len(second_qs) - asked_second_count
                 else:
@@ -304,13 +331,11 @@ elif st.session_state.step == 'testing':
                     
             st.session_state.verification_queue = queue
 
-        # Prior Verification -> Results
         if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
             st.session_state.step = 'results'
             st.rerun()
             st.stop()
             
-    # 2. Select Current Question
     if st.session_state.phase == 'adaptive':
         current_q = min(st.session_state.pool, key=lambda x: abs(x['diff'] - st.session_state.theta))
         status_text = f"Assessment Phase - Question {st.session_state.q_count + 1}"
@@ -323,32 +348,27 @@ elif st.session_state.step == 'testing':
         
     st.subheader(status_text)
     
-    # 3. Display Question or Feedback
     if not st.session_state.show_feedback:
         st.write(f"**(Level {int(current_q['diff'])})** {current_q['q']}")
         
-        # Add the 'I don't know' option dynamically just for the buttons
         display_options = current_q['opts'] + ["I don't know"]
         
         for idx, opt in enumerate(display_options):
             if st.button(opt, use_container_width=True):
                 is_correct = 1 if idx == current_q['ans'] else 0
                 
-                # Save answer data temporarily
                 st.session_state.pending_b = current_q['diff']
                 st.session_state.pending_r = is_correct
                 st.session_state.pending_q = current_q
                 st.session_state.pending_choice = opt
                 st.session_state.correct_text = current_q['opts'][current_q['ans']]
                 
-                # Trigger feedback screen
                 st.session_state.show_feedback = True
                 st.rerun()
                 
     else:
         st.write(current_q['q'])
         
-        # Display the custom feedback
         if st.session_state.pending_r == 1:
             st.success(f"**Correct!** That was a Level {int(current_q['diff'])} question.")
         elif st.session_state.pending_choice == "I don't know":
@@ -359,19 +379,16 @@ elif st.session_state.step == 'testing':
             st.info(f"The correct answer was: **{st.session_state.correct_text}**")
             
         if st.button("Next Question", use_container_width=True):
-            # Apply the saved results to the algorithm
             st.session_state.admin_b.append(st.session_state.pending_b)
             st.session_state.responses.append(st.session_state.pending_r)
             st.session_state.asked_questions.append(st.session_state.pending_q)
             
-            # Pass the initial theta to shift the center of gravity
             st.session_state.theta = estimate_ability(
                 st.session_state.admin_b, 
                 st.session_state.responses,
                 st.session_state.initial_theta
             )
             
-            # Remove from pool
             if st.session_state.phase == 'adaptive':
                 st.session_state.pool.remove(st.session_state.pending_q)
             else:
@@ -381,7 +398,7 @@ elif st.session_state.step == 'testing':
             st.session_state.show_feedback = False 
             st.rerun()
 
-# Screen 4: Results & Email Generation
+# Screen 4: Results & PDF Download
 elif st.session_state.step == 'results':
     st.header("Assessment Complete!")
     theta = st.session_state.theta
@@ -394,16 +411,26 @@ elif st.session_state.step == 'results':
     
     st.success(f"**Recommended Level:** {rec}")
     st.write(f"Total Questions Answered: {st.session_state.q_count}")
-    st.write("Please send these results to your recruiter to complete your application.")
+    st.write("Please download your official results below and send the PDF to your recruiter to complete your application.")
     
-    formatted_location = st.session_state.location.lower().replace(" ", "")
-    recipient = f"{formatted_location}@schoolofrock.com"
+    # Generate the PDF file
+    pdf_bytes = create_pdf(
+        st.session_state.candidate_name, 
+        st.session_state.location, 
+        st.session_state.instrument, 
+        rec, 
+        theta, 
+        st.session_state.q_count
+    )
     
-    subject = urllib.parse.quote(f"Instructor Assessment Results: {st.session_state.candidate_name} ({st.session_state.instrument})")
-    body = urllib.parse.quote(f"Hello,\n\nI have completed the instructor assessment.\n\nName: {st.session_state.candidate_name}\nInstrument: {st.session_state.instrument}\nRecommended Level: {rec}\nScore: {theta:.2f}")
-    mailto_link = f"mailto:{recipient}?subject={subject}&body={body}"
-    
-    st.link_button("📧 Tap to Email Results to Recruiter", mailto_link, use_container_width=True)
+    # Display the download button
+    st.download_button(
+        label="📄 Download Results as PDF",
+        data=pdf_bytes,
+        file_name=f"{st.session_state.candidate_name}_Assessment_{st.session_state.instrument}.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
     
     st.write("---")
     if st.button("Assess Another Instrument", use_container_width=True):
