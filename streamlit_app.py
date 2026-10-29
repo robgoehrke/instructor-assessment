@@ -9,8 +9,8 @@ def irt_probability(theta, b):
     except OverflowError:
         return 0.0 if (theta - b) < 0 else 1.0
 
-def estimate_ability(administered_b, responses):
-    best_theta = 4.0 # Center gravity at Book 4
+def estimate_ability(administered_b, responses, prior_mean):
+    best_theta = prior_mean # Center gravity at the candidate's self-estimate
     max_ll = -float('inf')
     
     for t in range(0, 81):
@@ -21,7 +21,7 @@ def estimate_ability(administered_b, responses):
             p = max(min(p, 1.0 - 1e-10), 1e-10) 
             ll += r * math.log(p) + (1 - r) * math.log(1 - p)
             
-        prior = -0.5 * ((theta - 4.0)**2)
+        prior = -0.5 * ((theta - prior_mean)**2)
         ll += prior
         
         if ll > max_ll:
@@ -199,6 +199,7 @@ st.title("Instructor Assessment")
 
 if 'step' not in st.session_state:
     st.session_state.step = 'candidate_info'
+    st.session_state.initial_theta = 4.0 
     st.session_state.theta = 4.0 
     st.session_state.admin_b = []
     st.session_state.responses = []
@@ -226,16 +227,30 @@ if st.session_state.step == 'candidate_info':
         else:
             st.error("Please enter your name.")
 
-# Screen 2: Choose Instrument
+# Screen 2: Choose Instrument & Self-Assessment
 elif st.session_state.step == 'choose_instrument':
-    st.write(f"Hi {st.session_state.candidate_name}! Which instrument would you like to assess?")
+    st.write(f"Hi {st.session_state.candidate_name}! Let's set up your assessment.")
+    
     instruments = sorted(list(set(q["inst"] for q in QUESTIONS)))
-    for inst in instruments:
-        if st.button(inst, use_container_width=True):
-            st.session_state.instrument = inst
-            st.session_state.pool = [q for q in QUESTIONS if q['inst'] == inst]
-            st.session_state.step = 'testing'
-            st.rerun()
+    selected_inst = st.selectbox("Which instrument are you assessing?", instruments)
+    
+    st.write("---")
+    st.write("**Self-Assessment**")
+    self_estimate = st.slider(
+        "On a scale of 1 to 6, how would you rate your teaching ability on this instrument? (1 = Beginner, 6 = Advanced)", 
+        min_value=1, 
+        max_value=6, 
+        value=4
+    )
+    
+    if st.button("Start Assessment", use_container_width=True):
+        st.session_state.instrument = selected_inst
+        # Anchor the math to their self-assessment
+        st.session_state.initial_theta = float(self_estimate)
+        st.session_state.theta = float(self_estimate)
+        st.session_state.pool = [q for q in QUESTIONS if q['inst'] == selected_inst]
+        st.session_state.step = 'testing'
+        st.rerun()
 
 # Screen 3: Three-Phase Testing with Feedback
 elif st.session_state.step == 'testing':
@@ -277,7 +292,7 @@ elif st.session_state.step == 'testing':
                 
                 asked_second_count = sum(1 for q in st.session_state.asked_questions if q['diff'] == second_diff)
                 
-                # THE 80% LOGIC UPDATE
+                # THE 80% LOGIC
                 if target_total > 0 and (target_correct / target_total) < 0.8:
                     needed = len(second_qs) - asked_second_count
                 else:
@@ -317,7 +332,6 @@ elif st.session_state.step == 'testing':
         
         for idx, opt in enumerate(display_options):
             if st.button(opt, use_container_width=True):
-                # The 'I don't know' button will naturally fail this check and register as 0 (incorrect)
                 is_correct = 1 if idx == current_q['ans'] else 0
                 
                 # Save answer data temporarily
@@ -350,7 +364,12 @@ elif st.session_state.step == 'testing':
             st.session_state.responses.append(st.session_state.pending_r)
             st.session_state.asked_questions.append(st.session_state.pending_q)
             
-            st.session_state.theta = estimate_ability(st.session_state.admin_b, st.session_state.responses)
+            # Pass the initial theta to shift the center of gravity
+            st.session_state.theta = estimate_ability(
+                st.session_state.admin_b, 
+                st.session_state.responses,
+                st.session_state.initial_theta
+            )
             
             # Remove from pool
             if st.session_state.phase == 'adaptive':
