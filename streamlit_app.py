@@ -2,6 +2,7 @@ import streamlit as st
 import math
 import tempfile
 import time
+from datetime import datetime
 from fpdf import FPDF
 from questions import QUESTIONS 
 
@@ -33,27 +34,95 @@ def estimate_ability(administered_b, responses, prior_mean):
             
     return best_theta
 
-# --- 2. PDF Generation Function ---
+# --- 2. Branded PDF Generation Function ---
 def create_pdf(name, location, instrument, rec, score, q_count):
     pdf = FPDF()
     pdf.add_page()
     
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "Instructor Assessment Results", ln=True, align="C")
+    # --- HEADER (Black background, White & Red text) ---
+    pdf.set_fill_color(0, 0, 0)
+    pdf.rect(0, 0, 210, 40, 'F')
+    
+    pdf.set_y(12)
+    pdf.set_font("Arial", 'B', 24)
+    pdf.set_text_color(255, 255, 255)
+    pdf.cell(0, 10, "SCHOOL OF ROCK", ln=True, align="C")
+    
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_text_color(220, 20, 60) # SoR Red
+    pdf.cell(0, 10, "INSTRUCTOR ASSESSMENT RESULTS", ln=True, align="C")
+    
+    # --- CANDIDATE DETAILS ---
+    pdf.set_y(55)
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, "CANDIDATE DETAILS", ln=True)
+    
+    # Red separator line
+    pdf.set_draw_color(220, 20, 60)
+    pdf.set_line_width(1)
+    pdf.line(10, 65, 200, 65)
+    pdf.ln(5)
+    
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(40, 8, "Name:", 0, 0)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, name, 0, 1)
+    
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(40, 8, "Location:", 0, 0)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, f"School of Rock {location}", 0, 1)
+    
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(40, 8, "Instrument:", 0, 0)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, instrument, 0, 1)
+    
+    date_str = datetime.now().strftime("%B %d, %Y")
+    pdf.set_font("Arial", '', 12)
+    pdf.cell(40, 8, "Date:", 0, 0)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, date_str, 0, 1)
+    
+    pdf.ln(15)
+    
+    # --- OFFICIAL RESULTS ---
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, "OFFICIAL RESULTS", ln=True)
+    y_line = pdf.get_y()
+    pdf.line(10, y_line, 200, y_line)
+    pdf.ln(5)
+    
+    # Highlighted Box for Recommended Level
+    pdf.set_fill_color(245, 245, 245)
+    pdf.rect(10, pdf.get_y(), 190, 20, 'F')
+    
+    pdf.set_y(pdf.get_y() + 5)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(50, 10, "  RECOMMENDED LEVEL: ", 0, 0)
+    pdf.set_text_color(220, 20, 60) # Red
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, rec, 0, 1)
+    
+    pdf.set_text_color(0, 0, 0)
     pdf.ln(10)
     
     pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Candidate Name: {name}", ln=True)
-    pdf.cell(0, 10, f"Interviewing at: School of Rock {location}", ln=True)
-    pdf.cell(0, 10, f"Instrument: {instrument}", ln=True)
-    pdf.ln(5)
-    
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, f"Recommended Level: {rec}", ln=True)
+    pdf.cell(50, 8, "Estimated IRT Score:", 0, 0)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, f"{score:.2f}", 0, 1)
     
     pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Estimated Score: {score:.2f}", ln=True)
-    pdf.cell(0, 10, f"Total Questions Answered: {q_count}", ln=True)
+    pdf.cell(50, 8, "Questions Answered:", 0, 0)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, str(q_count), 0, 1)
+    
+    # --- FOOTER ---
+    pdf.set_y(260)
+    pdf.set_font("Arial", 'I', 10)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 10, "Generated securely by the Instructor Assessment System.", align="C")
     
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         pdf.output(tmp.name)
