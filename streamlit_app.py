@@ -3,7 +3,7 @@ import math
 import tempfile
 import time
 from fpdf import FPDF
-from questions import QUESTIONS # <--- This pulls your list from the other file!
+from questions import QUESTIONS 
 
 # --- 1. IRT Probability & Estimation Models (Book-Scaled) ---
 def irt_probability(theta, b):
@@ -63,6 +63,23 @@ def create_pdf(name, location, instrument, rec, score, q_count):
 # --- 3. Web Interface UI ---
 st.set_page_config(page_title="Instructor Assessment", page_icon="🎸")
 st.title("Instructor Assessment")
+
+# --- ANTI-CHEATING SAFEGUARDS (Disable Copy/Paste/Highlight) ---
+st.markdown("""
+    <style>
+    /* Disables text selection and copying across the entire app */
+    body, .stApp {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    </style>
+    <script>
+    // Disables right-click menu
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
+""", unsafe_allow_html=True)
 
 if 'step' not in st.session_state:
     st.session_state.step = 'candidate_info'
