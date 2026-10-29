@@ -107,4 +107,283 @@ QUESTIONS = [
     {"inst": "Drums", "diff": 3.0, "ans": 1, "q": "Eighth note triplets are counted _______:", "opts": ["Tri-pl-et, Tri-pl-et, Tri-pl-et", "One-Trip-let, Two-Trip-let", "One-and-ah, Two-and-ah", "Ti-ti-ta, Ti-ti-ta"]},
     {"inst": "Drums", "diff": 3.0, "ans": 0, "q": "Shuffles are derived from what rhythm?", "opts": ["Triplets", "Eighth Notes", "Sixteenth Notes", "Quarter Notes"]},
     {"inst": "Drums", "diff": 3.0, "ans": 2, "q": "An example of an inverted paradiddle would be:", "opts": ["R L R L R R L R L R L L", "R R R L R R R L", "R L L R L R R L", "R R L L L L R R"]},
-    {"inst": "Drums", "diff": 3.0, "ans":
+    {"inst": "Drums", "diff": 3.0, "ans": 2, "q": "In a ¾ Waltz, the snare is played on which two beats?", "opts": ["1 & 2", "1 & 3", "2 & 3", "It’s only played on beat 3"]},
+    {"inst": "Drums", "diff": 3.0, "ans": 3, "q": "What is the difference between 4/4 time and ⅞ time?", "opts": ["Three 8th notes", "Three ¼ notes", "No difference", "One 8th note"]},
+    # Book 4
+    {"inst": "Drums", "diff": 4.0, "ans": 0, "q": "When playing 16th note double bass grooves, your ‘footing’ typically follows this pattern:", "opts": ["R L R L", "R R L L", "R L L R R L L R", "R L R R L R L L"]},
+    {"inst": "Drums", "diff": 4.0, "ans": 2, "q": "Steve Gadd played a groove that was a variation of the Mozambique rhythm on which Paul Simon song?", "opts": ["50 Ways to Leave Your Lover", "Graceland", "Late in The Evening", "The Boxer"]},
+    {"inst": "Drums", "diff": 4.0, "ans": 1, "q": "The African 3/2 Clave rhythm was the inspiration for this famous beat:", "opts": ["Train Beat", "Bo-Diddley Beat", "Purdie Shuffle", "New Jack Swing"]},
+    {"inst": "Drums", "diff": 4.0, "ans": 3, "q": "This influential drummer was one of the first rock drummers to heavily incorporate reggae and Latin influences in his playing.", "opts": ["Keith Moon", "Ginger Baker", "Neil Peart", "Stewart Copeland"]},
+    {"inst": "Drums", "diff": 4.0, "ans": 2, "q": "What rhythm is best used for counting 32nd notes?", "opts": ["Quarter notes", "Eighth notes", "Sixteenth notes", "Triplets"]},
+    # Book 5
+    {"inst": "Drums", "diff": 5.0, "ans": 1, "q": "What is Linear Drumming?", "opts": ["When you play grooves or fills where your limbs line up", "When you play grooves or fills where your limbs do not line up", "When you play grooves or fills based on second-line drumming", "When you play grooves or fills that line up with the bassist"]},
+    {"inst": "Drums", "diff": 5.0, "ans": 0, "q": "“Break On Through (To The Other Side)” is a famous example of a rock song in which the drummer is playing this Latin beat:", "opts": ["Bossa Nova", "Samba", "Baiao", "Cha Cha Cha"]},
+    {"inst": "Drums", "diff": 5.0, "ans": 2, "q": "What is an ostinato?", "opts": ["A funk groove", "A syncopated fill-in", "A repeated rhythmic pattern", "A short drum solo"]},
+    {"inst": "Drums", "diff": 5.0, "ans": 1, "q": "A hemiola is when", "opts": ["You play in an odd time signature", "You play a 3 over 2 pattern", "You play a linear groove", "A repeated rhythmic pattern"]},
+    {"inst": "Drums", "diff": 5.0, "ans": 0, "q": "The drum solo in “Packard Goose” by Frank Zappa is a:", "opts": ["Vamp in 6/4 time", "Vamp in 6/8 time", "Call & Response", "Open solo"]},
+    # Book 6
+    {"inst": "Drums", "diff": 6.0, "ans": 0, "q": "Quadruplets might be typically found in which of these time signatures:", "opts": ["4/4", "2/2", "7/4", "12/8"]},
+    {"inst": "Drums", "diff": 6.0, "ans": 1, "q": "A tresillo groove can best be described as:", "opts": ["123-123-12", "12-123-12", "1234-1234", "123-12-123"]},
+    {"inst": "Drums", "diff": 6.0, "ans": 2, "q": "Six patterns describe what concept?", "opts": ["Six stroke rolls", "Sextuplet hi hat patterns", "Six-note groupings between hands and feet", "Measures of 6/4"]},
+    {"inst": "Drums", "diff": 6.0, "ans": 1, "q": "Salidor, tres golpes, and quinto are all types of what?", "opts": ["Handheld bells", "Styles of dance", "Afro-Cuban 6/8 beats", "Conga drums"]},
+    {"inst": "Drums", "diff": 6.0, "ans": 3, "q": "Two different time signatures played together is referred to as:", "opts": ["A polyrhythm", "A polymeter", "A hybrid beat", "A complex time signature"]},
+
+    # ---------------- KEYS ----------------
+    # Book 2
+    {"inst": "Keys", "diff": 2.0, "ans": 1, "q": "What are the intervals of the minor scale?", "opts": ["1, 2, b3, 4, 5, 6, b7", "1, 2, b3, 4, 5, b6, b7", "1, 2, b3, 4, 5, b6, 7", "1, 2, 3, 4, 5, b6, b7"]},
+    {"inst": "Keys", "diff": 2.0, "ans": 0, "q": "How many sharps are in the key signature of D major?", "opts": ["2", "3", "None", "1"]},
+    {"inst": "Keys", "diff": 2.0, "ans": 2, "q": "For compound time signatures, the top number is divisible by____:", "opts": ["2", "4", "3", "5"]},
+    {"inst": "Keys", "diff": 2.0, "ans": 2, "q": "What is an inverted chord?", "opts": ["There is no root note.", "The root note is lower than the other notes in the triad.", "The root note is higher than at least one of the other notes in the triad.", "The triad is played as a descending arpeggio."]},
+    {"inst": "Keys", "diff": 2.0, "ans": 2, "q": "What intervals are in a dom 7th chord?", "opts": ["1, b3, 5, b7", "1, 3, 5, 7", "1, 3, 5, b7", "1, b3, 5, 7"]},
+    # Book 3
+    {"inst": "Keys", "diff": 3.0, "ans": 1, "q": "What interval is added to the minor pentatonic scale to get the Blues scale?", "opts": ["6", "b5", "4", "b3"]},
+    {"inst": "Keys", "diff": 3.0, "ans": 0, "q": "How many flats are in the key of Ab?", "opts": ["4", "3", "5", "2"]},
+    {"inst": "Keys", "diff": 3.0, "ans": 2, "q": "What is the relative minor of E maj?", "opts": ["G", "A", "C#", "B"]},
+    {"inst": "Keys", "diff": 3.0, "ans": 3, "q": "What intervals are in a Sus2 chord?", "opts": ["1, 3, 5", "1, 4, 5", "1, b3, 5", "1, 2, 5"]},
+    {"inst": "Keys", "diff": 3.0, "ans": 1, "q": "What is a passing chord?", "opts": ["A chord you skip when playing a chord progression.", "A chord that you play between two diatonic chords.", "A chord that you play for a whole measure.", "A rootless chord."]},
+    # Book 4
+    {"inst": "Keys", "diff": 4.0, "ans": 1, "q": "A diminished 7th chord contains these intervals:", "opts": ["1, 3, b5, b7", "1, b3, b5, bb7", "1, b3, 5, b7", "1, 3, b5, 7"]},
+    {"inst": "Keys", "diff": 4.0, "ans": 0, "q": "The Phrygian mode contains these intervals:", "opts": ["1, b2, b3, 4, 5, b6, b7", "1, b2, 3, 4, 5, 6, b7", "1, 2, b3, 4, 5, b6, b7", "1, b2, b3, 4, 5, 6, b7"]},
+    {"inst": "Keys", "diff": 4.0, "ans": 2, "q": "Chord extensions are:", "opts": ["When you add a 7.", "When you add the root an octave higher.", "When you extend the chord beyond the 7 into the next octave.", "When you add a non diatonic note."]},
+    {"inst": "Keys", "diff": 4.0, "ans": 3, "q": "The second note name in a slash chord contains:", "opts": ["The chord you play with your right hand.", "The chord substitution.", "The passing chord.", "The lowest note in the chord voicing."]},
+    {"inst": "Keys", "diff": 4.0, "ans": 0, "q": "An open chord voicing contains:", "opts": ["Notes in more than one octave.", "Just the root and the 5.", "A b5.", "No root note."]},
+    # Book 5
+    {"inst": "Keys", "diff": 5.0, "ans": 1, "q": "Which of the following progressions contains a functional dominant chord:", "opts": ["C7, D7, C7, D7", "Dm, G7, C, C", "C, F, C, C", "C7, F7, C7, F7"]},
+    {"inst": "Keys", "diff": 5.0, "ans": 0, "q": "What is unique about the ascending melodic minor scale?", "opts": ["When ascending it has a b3, descending it has a b3, b6, b7.", "When ascending it has a b3, b6, b7 and descending it has b3, b6.", "When ascending it has b3 and a b7 and descending it has b3, b7.", "When ascending it is major, when descending it is minor."]},
+    {"inst": "Keys", "diff": 5.0, "ans": 3, "q": "The lydian dominant scale is which of the following?", "opts": ["An 'altered scale'", "An 'exotic scale'", "A mode of the melodic minor scale.", "All of the above"]},
+    {"inst": "Keys", "diff": 5.0, "ans": 1, "q": "What is mixed meter?", "opts": ["A part that has different rhythmic accents in each hand", "A passage that moves between different time signatures", "A time signature where the numbers are different, such as 3/4.", "A melody that uses dotted notes."]},
+    {"inst": "Keys", "diff": 5.0, "ans": 0, "q": "When playing a guide tone voicing, what intervals are used in the chord?", "opts": ["3, 7", "5, 7", "3, 5", "4, 7"]},
+    # Book 6
+    {"inst": "Keys", "diff": 6.0, "ans": 0, "q": "A tresillo groove can best be described as:", "opts": ["123-123-12", "12-123-12", "1234-1234", "123-12-123"]},
+    {"inst": "Keys", "diff": 6.0, "ans": 2, "q": "Contrary Motion in voice leading refers to:", "opts": ["Melodic lines moving at different tempos", "Melodic lines moving at different intervals", "Melodic lines moving in different directions", "Melodic lines moving through different scales"]},
+    {"inst": "Keys", "diff": 6.0, "ans": 3, "q": "Quadruplets might be typically found in which of these time signatures:", "opts": ["4/4", "2/2", "7/4", "12/8"]},
+    {"inst": "Keys", "diff": 6.0, "ans": 3, "q": "“Slip Notes” refers to which technique?", "opts": ["Portamento bending on synths", "Multi-octave glissando", "Slipping in and out of a song’s key center", "Tasteful grace notes that add excitement to chord comping"]},
+    {"inst": "Keys", "diff": 6.0, "ans": 1, "q": "What is a symmetrical scale?", "opts": ["A scale that is derived from the diatonic scale.", "A scale based on a pattern of intervals instead such as the whole tone scale.", "A scale that incorporates passing tones.", "A scale that has six notes."]},
+
+    # ---------------- VOCALS ----------------
+    # Book 2
+    {"inst": "Vocals", "diff": 2.0, "ans": 0, "q": "True or False: Singers need less support when singing in falsetto/head voice vs full voice since the sound is higher.", "opts": ["False", "True"]},
+    {"inst": "Vocals", "diff": 2.0, "ans": 3, "q": "What muscles in the body engage with proper diaphragmatic support?", "opts": ["back/ rib cage", "gluteal/ buttocks", "pelvic/ stomach", "All of the above"]},
+    {"inst": "Vocals", "diff": 2.0, "ans": 0, "q": "How many notes are in the major Pentatonic scale?", "opts": ["5", "7", "6", "8"]},
+    {"inst": "Vocals", "diff": 2.0, "ans": 0, "q": "Common vocal harmonies that complete a major triad are ___", "opts": ["3rds & 5ths", "b3rds and 5ths", "Root and 5ths", "3rds and 7ths"]},
+    {"inst": "Vocals", "diff": 2.0, "ans": 0, "q": "Syncopation is when the ___ is stressed.", "opts": ["offbeat/ upbeat", "One", "Two and Four", "Onbeat"]},
+    # Book 3
+    {"inst": "Vocals", "diff": 3.0, "ans": 0, "q": "What are the 5 vocal resonators?", "opts": ["Head, mouth, chest, nasal cavity & sinus/ mask", "Diaphragm, head, chest, nasal cavity, mouth", "Head, mouth, chest, throat, sinus/mask", "Mouth, chest, nasal cavity, diaphragm, nasal cavity"]},
+    {"inst": "Vocals", "diff": 3.0, "ans": 0, "q": "What is staccato vs legato?", "opts": ["Staccato is short or disconnected and legato is long and connected", "Staccato is fast and legato is slow", "Staccato is loud and legato is soft", "Staccato is half time, legato is double time"]},
+    {"inst": "Vocals", "diff": 3.0, "ans": 0, "q": "All major triads consist of ___", "opts": ["1, 3 & 5 degrees", "1, 3, b5", "1, 4, 5", "1, b3, 5"]},
+    {"inst": "Vocals", "diff": 3.0, "ans": 0, "q": "How do you best count in your band for a song in ¾?", "opts": ["Give the band 2 measures “1, 2, 3; 2, 2, 3”", "1, 2, 3", "1, 2, 3, 4", "1, and 2, and 3, and 4"]},
+    {"inst": "Vocals", "diff": 3.0, "ans": 0, "q": "True or False: Triplets always need to have 3 notes in them?", "opts": ["False: the notes of the triplet just need to add up to three of whatever value there would normally be two of", "True"]},
+    # Book 4
+    {"inst": "Vocals", "diff": 4.0, "ans": 2, "q": "When you sing you want to move your larynx", "opts": ["Up", "Down", "As little as possible", "Quickly"]},
+    {"inst": "Vocals", "diff": 4.0, "ans": 0, "q": "True or False: Vibrato is naturally occurring when you are breathing deeply with loosened support muscles.", "opts": ["False: vibrato occurs when you are relaxed and supporting your voice correctly.", "True"]},
+    {"inst": "Vocals", "diff": 4.0, "ans": 0, "q": "What chord progression is I-vi-IV-V in the Key of C?", "opts": ["C-Am- F- G", "C-Bm-F-G", "C-Am-F#-G", "C-A-F-G"]},
+    {"inst": "Vocals", "diff": 4.0, "ans": 0, "q": "When transposing a song from the Key of C to the Key of G, by what interval might you be moving each note?", "opts": ["Perfect fifth higher", "Perfect fourth higher", "Perfect fifth lower", "None of the above"]},
+    {"inst": "Vocals", "diff": 4.0, "ans": 3, "q": "What are some of the biggest contributors to vocal health?", "opts": ["Hydration", "Rest", "Not smoking/ Vaping", "All of the above"]},
+    # Book 5
+    {"inst": "Vocals", "diff": 5.0, "ans": 1, "q": "One way to make singing notes at the top of your range easier is to_____:", "opts": ["Use your chest voice.", "Use a more closed vocal position for vowel sounds.", "Use your diaphragm.", "Use a more open vocal position for vowel sounds."]},
+    {"inst": "Vocals", "diff": 5.0, "ans": 2, "q": "What is vocal onset?", "opts": ["The beginning of your vocal range.", "When the hard sound from a t.", "When you move from breath to sound.", "The point at which your voice cracks."]},
+    {"inst": "Vocals", "diff": 5.0, "ans": 2, "q": "The fourth mode of the C Major Scale is:", "opts": ["C Aeolian", "G Mixolydian", "F Lydian", "G Dorian"]},
+    {"inst": "Vocals", "diff": 5.0, "ans": 0, "q": "Lip trills are designed to _____:", "opts": ["Help you develop even breath flow.", "Help you sing faster.", "Help projection.", "Help you find your range."]},
+    {"inst": "Vocals", "diff": 5.0, "ans": 3, "q": "What element of a song will help you determine if a song is in a comfortable range?", "opts": ["They key.", "The highest note.", "The lowest note.", "The entire melody."]},
+    # Book 6
+    {"inst": "Vocals", "diff": 6.0, "ans": 0, "q": "A 3:2 Clave is a syncopated rhythm featuring:", "opts": ["Three beats in the first measure and two beats in the second measure", "A 3 over 2 polyrhythm", "Two consecutive triplets", "Three consecutive duplets"]},
+    {"inst": "Vocals", "diff": 6.0, "ans": 2, "q": "Contrary Motion in voice leading refers to:", "opts": ["Melodic lines moving at different tempos", "Melodic lines moving at different intervals", "Melodic lines moving in different directions", "Melodic lines moving through different scales"]},
+    {"inst": "Vocals", "diff": 6.0, "ans": 2, "q": "A melisma refers to:", "opts": ["A frequently repeated rhythmic idea.", "A breathing technique where the breath is drawn in from the nose.", "An ornamental technique where one vowel sound is stretched over multiple notes.", "A melody sung at half vocal power."]},
+    {"inst": "Vocals", "diff": 6.0, "ans": 0, "q": "What are the most common extensions used over a major chord?", "opts": ["1, 3, 5, 7, 9, #11, 13", "1, 3, 5, ♭7, 9, 11, 13", "1, 3, 5, 7, #9, 11, ♭13", "1, 3, 5, 7, 9, 11, #13"]},
+    {"inst": "Vocals", "diff": 6.0, "ans": 2, "q": "Vocalese is a style of signing where:", "opts": ["The vocal parts are totally improvised.", "It is always acapella.", "The vocal parts are actual transcriptions of solos and sung note for note using lyrics.", "Nonsensical words are sung."]}
+]
+
+# --- 3. Web Interface UI ---
+st.set_page_config(page_title="Instructor Assessment", page_icon="🎸")
+st.title("Instructor Assessment")
+
+if 'step' not in st.session_state:
+    st.session_state.step = 'candidate_info'
+    st.session_state.theta = 4.0 
+    st.session_state.admin_b = []
+    st.session_state.responses = []
+    st.session_state.pool = []
+    st.session_state.asked_questions = []
+    st.session_state.phase = 'adaptive'
+    st.session_state.verification_queue = []
+    st.session_state.q_count = 0
+    st.session_state.show_feedback = False 
+
+# Screen 1: Candidate Info
+if st.session_state.step == 'candidate_info':
+    st.write("Please enter your information to begin the assessment.")
+    co_locations = ["Aurora", "Boulder", "Broomfield", "Centennial", "Colorado Springs", "Denver", "Littleton", "Longmont"]
+    name = st.text_input("Full Name")
+    location = st.selectbox("Which School of Rock are you interviewing with?", co_locations)
+    
+    if st.button("Continue", use_container_width=True):
+        if name:
+            st.session_state.candidate_name = name
+            st.session_state.location = location
+            st.session_state.step = 'choose_instrument'
+            st.rerun()
+        else:
+            st.error("Please enter your name.")
+
+# Screen 2: Choose Instrument
+elif st.session_state.step == 'choose_instrument':
+    st.write(f"Hi {st.session_state.candidate_name}! Which instrument would you like to assess?")
+    instruments = sorted(list(set(q["inst"] for q in QUESTIONS)))
+    for inst in instruments:
+        if st.button(inst, use_container_width=True):
+            st.session_state.instrument = inst
+            st.session_state.pool = [q for q in QUESTIONS if q['inst'] == inst]
+            st.session_state.step = 'testing'
+            st.rerun()
+
+# Screen 3: Three-Phase Testing with Feedback
+elif st.session_state.step == 'testing':
+    
+    # 1. Transition Checks (Only run when NOT showing feedback)
+    if not st.session_state.show_feedback:
+        
+        # Adaptive -> Target Verification
+        if st.session_state.phase == 'adaptive' and (st.session_state.q_count >= 7 or not st.session_state.pool):
+            st.session_state.phase = 'verification_target'
+            
+            theta = st.session_state.theta
+            if theta < 2.5: target_diff = 2.0
+            elif theta < 3.5: target_diff = 3.0
+            elif theta < 4.5: target_diff = 4.0
+            elif theta < 5.5: target_diff = 5.0
+            else: target_diff = 6.0
+            
+            st.session_state.target_diff = target_diff
+            
+            asked_texts = [q['q'] for q in st.session_state.asked_questions]
+            target_qs = [q for q in QUESTIONS if q['inst'] == st.session_state.instrument and q['diff'] == target_diff]
+            
+            st.session_state.verification_queue = [q for q in target_qs if q['q'] not in asked_texts]
+
+        # Target Verification -> Prior Verification
+        if st.session_state.phase == 'verification_target' and not st.session_state.verification_queue:
+            st.session_state.phase = 'verification_prior'
+            target_diff = st.session_state.target_diff
+            second_diff = target_diff - 1.0
+            
+            queue = []
+            if second_diff >= 2.0:
+                asked_texts = [q['q'] for q in st.session_state.asked_questions]
+                second_qs = [q for q in QUESTIONS if q['inst'] == st.session_state.instrument and q['diff'] == second_diff]
+                
+                target_correct = sum(r for q, r in zip(st.session_state.asked_questions, st.session_state.responses) if q['diff'] == target_diff)
+                target_total = sum(1 for q in st.session_state.asked_questions if q['diff'] == target_diff)
+                
+                asked_second_count = sum(1 for q in st.session_state.asked_questions if q['diff'] == second_diff)
+                
+                # THE 80% LOGIC UPDATE
+                if target_total > 0 and (target_correct / target_total) < 0.8:
+                    needed = len(second_qs) - asked_second_count
+                else:
+                    needed = 3 - asked_second_count
+                    
+                if needed > 0:
+                    unasked_second = [q for q in second_qs if q['q'] not in asked_texts]
+                    queue.extend(unasked_second[:needed])
+                    
+            st.session_state.verification_queue = queue
+
+        # Prior Verification -> Results
+        if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
+            st.session_state.step = 'results'
+            st.rerun()
+            st.stop()
+            
+    # 2. Select Current Question
+    if st.session_state.phase == 'adaptive':
+        current_q = min(st.session_state.pool, key=lambda x: abs(x['diff'] - st.session_state.theta))
+        status_text = f"Assessment Phase - Question {st.session_state.q_count + 1}"
+    elif st.session_state.phase == 'verification_target':
+        current_q = st.session_state.verification_queue[0]
+        status_text = f"Verification Phase - {len(st.session_state.verification_queue)} left"
+    else: 
+        current_q = st.session_state.verification_queue[0]
+        status_text = f"Verification Phase - {len(st.session_state.verification_queue)} left"
+        
+    st.subheader(status_text)
+    
+    # 3. Display Question or Feedback
+    if not st.session_state.show_feedback:
+        st.write(f"**(Level {int(current_q['diff'])})** {current_q['q']}")
+        
+        for idx, opt in enumerate(current_q['opts']):
+            if st.button(opt, use_container_width=True):
+                is_correct = 1 if idx == current_q['ans'] else 0
+                
+                # Save answer data temporarily
+                st.session_state.pending_b = current_q['diff']
+                st.session_state.pending_r = is_correct
+                st.session_state.pending_q = current_q
+                st.session_state.correct_text = current_q['opts'][current_q['ans']]
+                
+                # Trigger feedback screen
+                st.session_state.show_feedback = True
+                st.rerun()
+                
+    else:
+        st.write(current_q['q'])
+        
+        # Display the feedback
+        if st.session_state.pending_r == 1:
+            st.success(f"**Correct!** That was a Level {int(current_q['diff'])} question.")
+        else:
+            st.error(f"**Incorrect.** That was a Level {int(current_q['diff'])} question.")
+            st.info(f"The correct answer was: **{st.session_state.correct_text}**")
+            
+        if st.button("Next Question", use_container_width=True):
+            # Apply the saved results to the algorithm
+            st.session_state.admin_b.append(st.session_state.pending_b)
+            st.session_state.responses.append(st.session_state.pending_r)
+            st.session_state.asked_questions.append(st.session_state.pending_q)
+            
+            st.session_state.theta = estimate_ability(st.session_state.admin_b, st.session_state.responses)
+            
+            # Remove from pool
+            if st.session_state.phase == 'adaptive':
+                st.session_state.pool.remove(st.session_state.pending_q)
+            else:
+                st.session_state.verification_queue.pop(0)
+                
+            st.session_state.q_count += 1
+            st.session_state.show_feedback = False 
+            st.rerun()
+
+# Screen 4: Results & Email Generation
+elif st.session_state.step == 'results':
+    st.header("Assessment Complete!")
+    theta = st.session_state.theta
+    
+    if theta < 2.5: rec = "Book 2 (or below)"
+    elif theta < 3.5: rec = "Book 3"
+    elif theta < 4.5: rec = "Book 4"
+    elif theta < 5.5: rec = "Book 5"
+    else: rec = "Book 6"
+    
+    st.success(f"**Recommended Level:** {rec}")
+    st.write(f"Total Questions Answered: {st.session_state.q_count}")
+    st.write("Please send these results to your recruiter to complete your application.")
+    
+    formatted_location = st.session_state.location.lower().replace(" ", "")
+    recipient = f"{formatted_location}@schoolofrock.com"
+    
+    subject = urllib.parse.quote(f"Instructor Assessment Results: {st.session_state.candidate_name} ({st.session_state.instrument})")
+    body = urllib.parse.quote(f"Hello,\n\nI have completed the instructor assessment.\n\nName: {st.session_state.candidate_name}\nInstrument: {st.session_state.instrument}\nRecommended Level: {rec}\nScore: {theta:.2f}")
+    mailto_link = f"mailto:{recipient}?subject={subject}&body={body}"
+    
+    st.link_button("📧 Tap to Email Results to Recruiter", mailto_link, use_container_width=True)
+    
+    st.write("---")
+    if st.button("Assess Another Instrument", use_container_width=True):
+        name_memory = st.session_state.candidate_name
+        loc_memory = st.session_state.location
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.session_state.candidate_name = name_memory
+        st.session_state.location = loc_memory
+        st.session_state.step = 'choose_instrument'
+        st.rerun()
