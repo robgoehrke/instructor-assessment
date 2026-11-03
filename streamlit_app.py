@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components  # <-- Add this line
 import math
 import tempfile
 import time
@@ -170,7 +171,7 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
 st.set_page_config(page_title="Instructor Assessment", page_icon="🎸")
 st.title("Instructor Assessment")
 
-# --- ANTI-CHEATING SAFEGUARDS (Disable Copy/Paste/Highlight) ---
+# --- ANTI-CHEATING SAFEGUARDS (Disable Copy/Paste/Highlight & Prevent Reload) ---
 st.markdown("""
     <style>
     /* Disables text selection and copying across the entire app */
@@ -182,6 +183,21 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+# Invisibly triggers the browser's native "Are you sure you want to leave?" warning
+components.html(
+    """
+    <script>
+    const parentWindow = window.parent || window;
+    parentWindow.addEventListener('beforeunload', function(e) {
+        e.preventDefault();
+        e.returnValue = '';
+    });
+    </script>
+    """,
+    height=0,
+    width=0,
+)
 
 if 'step' not in st.session_state:
     st.session_state.step = 'candidate_info'
