@@ -276,38 +276,59 @@ elif st.session_state.step == 'choose_instrument':
         min_value=1, max_value=6, value=4
     )
     
-    if st.button("Start Assessment", use_container_width=True):
+    if st.button("Continue to Instructions", use_container_width=True):
         if selected_inst:
             st.session_state.instrument = selected_inst
             st.session_state.initial_theta = float(self_estimate)
             st.session_state.theta = float(self_estimate)
             st.session_state.pool = [q for q in QUESTIONS if q['inst'] == selected_inst]
-            st.session_state.step = 'testing'
-            st.session_state.question_start_time = time.time()
-            
-            # --- SILENT AUDIT LOG PING (BACKGROUND THREAD) ---
-            webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
-            
-            audit_data = {
-                "name": st.session_state.candidate_name,
-                "location": st.session_state.location,
-                "instrument": selected_inst,
-                "level": self_estimate
-            }
-            
-            def ping_google(url, data):
-                try:
-                    requests.post(url, json=data, timeout=3)
-                except:
-                    pass
-                    
-            # Sends data instantly without freezing the app
-            threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
-                
+            st.session_state.step = 'instructions'
             st.rerun()
         else:
             st.error("Please select an instrument to continue.")
+
+# Screen 2.5: Instructions & Security Briefing
+elif st.session_state.step == 'instructions':
+    st.header("Assessment Instructions")
+    st.write("Please read the following guidelines carefully before beginning:")
+    
+    st.markdown("""
+    * **⏱️ 20-Second Timer:** You have exactly 20 seconds to answer each question.
+      * Answering under 10 seconds earns **100% credit**.
+      * Answering between 10 and 20 seconds earns **partial credit**.
+      * Running out of time counts as an **incorrect answer**.
+    * **🔒 Security Measures:** Copying, pasting, right-clicking, and highlighting text are strictly disabled.
+    * **⚠️ Do Not Refresh:** If you hit the back button, refresh the page, or close this tab, the test will lock you out, all progress will be permanently lost, and the system will record an incomplete attempt.
+    * **🤷 "I don't know" Option:** If you are truly stumped, select "I don't know" to skip the question without having to wait for the timer to run out.
+    """)
+    
+    st.warning("Ensure you have a stable internet connection and are ready to focus.")
+    
+    if st.button("Start Assessment", type="primary", use_container_width=True):
+        st.session_state.step = 'testing'
+        st.session_state.question_start_time = time.time()
+        
+        # --- SILENT AUDIT LOG PING (BACKGROUND THREAD) ---
+        webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
+        
+        audit_data = {
+            "name": st.session_state.candidate_name,
+            "location": st.session_state.location,
+            "instrument": st.session_state.instrument,
+            "level": st.session_state.initial_theta
+        }
+        
+        def ping_google(url, data):
+            try:
+                requests.post(url, json=data, timeout=3)
+            except:
+                pass
+                
+        # Sends data instantly without freezing the app
+        threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
             
+        st.rerun()
+        
 # Screen 3: Three-Phase Testing with Timer & Feedback
 elif st.session_state.step == 'testing':
     
