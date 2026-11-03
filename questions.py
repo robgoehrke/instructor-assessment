@@ -34,14 +34,14 @@ QUESTIONS = [
 
     # ---------------- BASS ----------------
     {"inst": "Bass", "diff": 2.0, "ans": 1, "q": "What are the intervals of the natural minor scale?", "opts": ["1, 2, b3, 4, 5, 6, b7", "1, 2, b3, 4, 5, b6, b7", "1, 2, b3, 4, 5, b6, 7", "1, 2, b3, 4, 5, 6, 7"]},
-    {"inst": "Bass", "diff": 2.0, "ans": 2, "q": "What intervals are in an augmented triad?", "opts": ["1, 3, 5", "1, 3, 7", "1, 3, 5#", "1, b3, 5#"]},
+    {"inst": "Bass", "diff": 2.0, "ans": 2, "q": "What intervals are in an augmented triad?", "opts": ["1, 3, 5", "1, 3, 7", "1, 3, #5", "1, b3, #5"]},
     {"inst": "Bass", "diff": 2.0, "ans": 3, "q": "Which of these chord progressions describes a I-vi-ii-V in the key of A?", "opts": ["A-Bm-F#m-D", "A-E-F#m-D", "E-C#m-F#m-B", "A-F#m-Bm-E"]},
     {"inst": "Bass", "diff": 2.0, "ans": 1, "q": "A common form of bass syncopation places some notes on the _______?", "opts": ["Downbeat.", "The 'and'.", "One.", "Kick drum."]},
-    {"inst": "Bass", "diff": 2.0, "ans": 0, "q": "Which of these bass players exclusively played with a pick:", "opts": ["Carol Kaye and Lemmy", "Chris Squire and John Paul Jones", "John Entwhistle and Geddy Lee", "Les Claypool and Paul McCartney"]},
+    {"inst": "Bass", "diff": 2.0, "ans": 0, "q": "Which of these bass players exclusively played with a pick:", "opts": ["Carol Kaye and Lemmy", "Chris Squire and John Paul Jones", "John Entwistle and Geddy Lee", "Les Claypool and Paul McCartney"]},
     
     {"inst": "Bass", "diff": 3.0, "ans": 1, "q": "What is the relative minor of Fmaj?", "opts": ["Cm", "Dm", "Bm", "Fm"]},
     {"inst": "Bass", "diff": 3.0, "ans": 2, "q": "How many sharps in A major?", "opts": ["None", "2", "3", "4"]},
-    {"inst": "Bass", "diff": 3.0, "ans": 3, "q": "How many eighth note triplets can be in a bar of 4/4?", "opts": ["8", "3", "2", "4"]},
+    {"inst": "Bass", "diff": 3.0, "ans": 0, "q": "How many eighth note triplets can be in a bar of 4/4?", "opts": ["12", "8", "6", "4"]},
     {"inst": "Bass", "diff": 3.0, "ans": 2, "q": "Who is considered the inventor of the electric bass slap and pop technique?", "opts": ["Flea", "Bootsy Collins", "Larry Graham", "Victor Wooten"]},
     {"inst": "Bass", "diff": 3.0, "ans": 0, "q": "When playing a shuffle groove, beats ____ and ______ are accented:", "opts": ["2, 4", "1, 3", "And of 2, and of 4", "And of 1, and of 3"]},
     
@@ -89,10 +89,10 @@ QUESTIONS = [
     {"inst": "Drums", "diff": 5.0, "ans": 0, "q": "The drum solo in “Packard Goose” by Frank Zappa is a:", "opts": ["Vamp in 6/4 time", "Vamp in 6/8 time", "Call & Response", "Open solo"]},
     
     {"inst": "Drums", "diff": 6.0, "ans": 0, "q": "Quadruplets might be typically found in which of these time signatures:", "opts": ["4/4", "2/2", "7/4", "12/8"]},
-    {"inst": "Drums", "diff": 6.0, "ans": 1, "q": "A tresillo groove can best be described as:", "opts": ["123-123-12", "12-123-12", "1234-1234", "123-12-123"]},
+    {"inst": "Drums", "diff": 6.0, "ans": 0, "q": "A tresillo groove can best be described as:", "opts": ["123-123-12", "12-123-12", "1234-1234", "123-12-123"]},
     {"inst": "Drums", "diff": 6.0, "ans": 2, "q": "Six patterns describe what concept?", "opts": ["Six stroke rolls", "Sextuplet hi hat patterns", "Six-note groupings between hands and feet", "Measures of 6/4"]},
-    {"inst": "Drums", "diff": 6.0, "ans": 1, "q": "Salidor, tres golpes, and quinto are all types of what?", "opts": ["Handheld bells", "Styles of dance", "Afro-Cuban 6/8 beats", "Conga drums"]},
-    {"inst": "Drums", "diff": 6.0, "ans": 3, "q": "Two different time signatures played together is referred to as:", "opts": ["A polyrhythm", "A polymeter", "A hybrid beat", "A complex time signature"]},
+    {"inst": "Drums", "diff": 6.0, "ans": 3, "q": "Salidor, tres golpes, and quinto are all types of what?", "opts": ["Handheld bells", "Styles of dance", "Afro-Cuban 6/8 beats", "Conga drums"]},
+    {"inst": "Drums", "diff": 6.0, "ans": 1, "q": "Two different time signatures played together is referred to as:", "opts": ["A polyrhythm", "A polymeter", "A hybrid beat", "A complex time signature"]},
 
     # ---------------- KEYS ----------------
     {"inst": "Keys", "diff": 2.0, "ans": 1, "q": "What are the intervals of the minor scale?", "opts": ["1, 2, b3, 4, 5, 6, b7", "1, 2, b3, 4, 5, b6, b7", "1, 2, b3, 4, 5, b6, 7", "1, 2, 3, 4, 5, b6, b7"]},
@@ -145,14 +145,14 @@ QUESTIONS = [
     {"inst": "Vocals", "diff": 4.0, "ans": 3, "q": "What are some of the biggest contributors to vocal health?", "opts": ["Hydration", "Rest", "Not smoking/ Vaping", "All of the above"]},
     
     {"inst": "Vocals", "diff": 5.0, "ans": 1, "q": "One way to make singing notes at the top of your range easier is to_____:", "opts": ["Use your chest voice.", "Use a more closed vocal position for vowel sounds.", "Use your diaphragm.", "Use a more open vocal position for vowel sounds."]},
-    {"inst": "Vocals", "diff": 5.0, "ans": 2, "q": "What is vocal onset?", "opts": ["The beginning of your vocal range.", "When the hard sound from a t.", "When you move from breath to sound.", "The point at which your voice cracks."]},
+    {"inst": "Vocals", "diff": 5.0, "ans": 2, "q": "What is vocal onset?", "opts": ["The beginning of your vocal range.", "When an unvoiced consonant sound starts.", "When you move from breath to sound.", "The point at which your voice cracks."]},
     {"inst": "Vocals", "diff": 5.0, "ans": 2, "q": "The fourth mode of the C Major Scale is:", "opts": ["C Aeolian", "G Mixolydian", "F Lydian", "G Dorian"]},
     {"inst": "Vocals", "diff": 5.0, "ans": 0, "q": "Lip trills are designed to _____:", "opts": ["Help you develop even breath flow.", "Help you sing faster.", "Help projection.", "Help you find your range."]},
-    {"inst": "Vocals", "diff": 5.0, "ans": 3, "q": "What element of a song will help you determine if a song is in a comfortable range?", "opts": ["They key.", "The highest note.", "The lowest note.", "The entire melody."]},
+    {"inst": "Vocals", "diff": 5.0, "ans": 3, "q": "What element of a song will help you determine if a song is in a comfortable range?", "opts": ["The key.", "The highest note.", "The lowest note.", "The entire melody."]},
     
     {"inst": "Vocals", "diff": 6.0, "ans": 0, "q": "A 3:2 Clave is a syncopated rhythm featuring:", "opts": ["Three beats in the first measure and two beats in the second measure", "A 3 over 2 polyrhythm", "Two consecutive triplets", "Three consecutive duplets"]},
     {"inst": "Vocals", "diff": 6.0, "ans": 2, "q": "Contrary Motion in voice leading refers to:", "opts": ["Melodic lines moving at different tempos", "Melodic lines moving at different intervals", "Melodic lines moving in different directions", "Melodic lines moving through different scales"]},
     {"inst": "Vocals", "diff": 6.0, "ans": 2, "q": "A melisma refers to:", "opts": ["A frequently repeated rhythmic idea.", "A breathing technique where the breath is drawn in from the nose.", "An ornamental technique where one vowel sound is stretched over multiple notes.", "A melody sung at half vocal power."]},
     {"inst": "Vocals", "diff": 6.0, "ans": 0, "q": "What are the most common extensions used over a major chord?", "opts": ["1, 3, 5, 7, 9, #11, 13", "1, 3, 5, ♭7, 9, 11, 13", "1, 3, 5, 7, #9, 11, ♭13", "1, 3, 5, 7, 9, 11, #13"]},
-    {"inst": "Vocals", "diff": 6.0, "ans": 2, "q": "Vocalese is a style of signing where:", "opts": ["The vocal parts are totally improvised.", "It is always acapella.", "The vocal parts are actual transcriptions of solos and sung note for note using lyrics.", "Nonsensical words are sung."]}
+    {"inst": "Vocals", "diff": 6.0, "ans": 2, "q": "Vocalese is a style of singing where:", "opts": ["The vocal parts are totally improvised.", "It is always acapella.", "The vocal parts are actual transcriptions of solos and sung note for note using lyrics.", "Nonsensical words are sung."]}
 ]
