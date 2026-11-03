@@ -352,13 +352,14 @@ elif st.session_state.step == 'testing':
                     st.session_state.timed_out = True
                 else:
                     st.session_state.timed_out = False
-                if idx == current_q['ans']:
+                    if idx == current_q['ans']:
                         if time_taken <= 10:
                             is_correct = 1.0
                         else:
-                            # Decays from 100% at 10s down to 50% at 20s
                             is_correct = 1.0 - 0.5 * ((time_taken - 10) / 10)
-                    else:                
+                    else:
+                        is_correct = 0.0
+                
                 st.session_state.pending_b = current_q['diff']
                 st.session_state.pending_r = is_correct
                 st.session_state.pending_q = current_q
