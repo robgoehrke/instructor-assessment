@@ -258,7 +258,8 @@ elif st.session_state.step == 'choose_instrument':
         # Sends data instantly without freezing the app
         threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
             
-        st.rerun(        
+        st.rerun()
+        
 # Screen 3: Three-Phase Testing with Timer & Feedback
 elif st.session_state.step == 'testing':
     
