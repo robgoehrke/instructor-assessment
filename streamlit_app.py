@@ -35,11 +35,11 @@ def estimate_ability(administered_b, responses, prior_mean):
     return best_theta
 
 # --- 2. Branded PDF Generation Function ---
-def create_pdf(name, location, instrument, rec, score, q_count):
+def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, responses, choices):
     pdf = FPDF()
     pdf.add_page()
     
-    # --- HEADER (Black background, White & Red text) ---
+    # --- HEADER ---
     pdf.set_fill_color(0, 0, 0)
     pdf.rect(0, 0, 210, 40, 'F')
     
@@ -49,7 +49,7 @@ def create_pdf(name, location, instrument, rec, score, q_count):
     pdf.cell(0, 10, "SCHOOL OF ROCK", ln=True, align="C")
     
     pdf.set_font("Arial", 'B', 12)
-    pdf.set_text_color(220, 20, 60) # SoR Red
+    pdf.set_text_color(220, 20, 60)
     pdf.cell(0, 10, "INSTRUCTOR ASSESSMENT RESULTS", ln=True, align="C")
     
     # --- CANDIDATE DETAILS ---
@@ -58,7 +58,6 @@ def create_pdf(name, location, instrument, rec, score, q_count):
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "CANDIDATE DETAILS", ln=True)
     
-    # Red separator line
     pdf.set_draw_color(220, 20, 60)
     pdf.set_line_width(1)
     pdf.line(10, 65, 200, 65)
@@ -87,21 +86,20 @@ def create_pdf(name, location, instrument, rec, score, q_count):
     
     pdf.ln(15)
     
-    # --- OFFICIAL RESULTS ---
+    # --- SUMMARY RESULTS ---
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "OFFICIAL RESULTS", ln=True)
     y_line = pdf.get_y()
     pdf.line(10, y_line, 200, y_line)
     pdf.ln(5)
     
-    # Highlighted Box for Recommended Level
     pdf.set_fill_color(245, 245, 245)
     pdf.rect(10, pdf.get_y(), 190, 20, 'F')
     
     pdf.set_y(pdf.get_y() + 5)
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(50, 10, "  RECOMMENDED LEVEL: ", 0, 0)
-    pdf.set_text_color(220, 20, 60) # Red
+    pdf.set_text_color(220, 20, 60)
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, rec, 0, 1)
     
@@ -117,9 +115,46 @@ def create_pdf(name, location, instrument, rec, score, q_count):
     pdf.cell(50, 8, "Questions Answered:", 0, 0)
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(0, 8, str(q_count), 0, 1)
+
+    # --- DETAILED QUESTION LOG ---
+    pdf.add_page()
+    pdf.set_fill_color(0, 0, 0)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, " DETAILED QUESTION LOG", ln=True, fill=True)
+    pdf.ln(5)
+    
+    pdf.set_text_color(0, 0, 0)
+    for i, (q, r, choice) in enumerate(zip(asked_qs, responses, choices)):
+        correct_ans_text = q['opts'][q['ans']]
+        
+        if r > 0:
+            status = f"Correct ({int(r*100)}% credit)"
+        else:
+            status = "Incorrect"
+            
+        pdf.set_font("Arial", 'B', 11)
+        pdf.multi_cell(0, 6, f"Q{i+1} (Level {int(q['diff'])}): {q['q']}")
+        
+        pdf.set_font("Arial", '', 10)
+        pdf.multi_cell(0, 6, f"Candidate Answer: {choice}")
+        pdf.multi_cell(0, 6, f"Correct Answer: {correct_ans_text}")
+        
+        if r > 0:
+            pdf.set_text_color(34, 139, 34) # Green
+        else:
+            pdf.set_text_color(220, 20, 60) # Red
+            
+        pdf.cell(0, 6, f"Result: {status}", ln=True)
+        
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_draw_color(200, 200, 200)
+        pdf.set_line_width(0.5)
+        pdf.line(10, pdf.get_y() + 2, 200, pdf.get_y() + 2)
+        pdf.ln(6)
     
     # --- FOOTER ---
-    pdf.set_y(260)
+    pdf.ln(10)
     pdf.set_font("Arial", 'I', 10)
     pdf.set_text_color(150, 150, 150)
     pdf.cell(0, 10, "Generated securely by the Instructor Assessment System.", align="C")
@@ -128,7 +163,7 @@ def create_pdf(name, location, instrument, rec, score, q_count):
         pdf.output(tmp.name)
         with open(tmp.name, "rb") as f:
             return f.read()
-
+            
 # --- 3. Web Interface UI ---
 st.set_page_config(page_title="Instructor Assessment", page_icon="🎸")
 st.title("Instructor Assessment")
@@ -166,6 +201,7 @@ if 'step' not in st.session_state:
     st.session_state.question_start_time = 0
     st.session_state.time_taken = 0
     st.session_state.timed_out = False
+    st.session_state.user_choices = []
 
 # Screen 1: Candidate Info
 if st.session_state.step == 'candidate_info':
@@ -299,14 +335,13 @@ elif st.session_state.step == 'testing':
                     st.session_state.timed_out = True
                 else:
                     st.session_state.timed_out = False
-                    if idx == current_q['ans']:
-                        if time_taken <= 5:
+                if idx == current_q['ans']:
+                        if time_taken <= 10:
                             is_correct = 1.0
                         else:
-                            is_correct = 1.0 - 0.5 * ((time_taken - 5) / 15)
-                    else:
-                        is_correct = 0.0
-                
+                            # Decays from 100% at 10s down to 50% at 20s
+                            is_correct = 1.0 - 0.5 * ((time_taken - 10) / 10)
+                    else:                
                 st.session_state.pending_b = current_q['diff']
                 st.session_state.pending_r = is_correct
                 st.session_state.pending_q = current_q
@@ -342,6 +377,9 @@ elif st.session_state.step == 'testing':
             st.session_state.admin_b.append(st.session_state.pending_b)
             st.session_state.responses.append(st.session_state.pending_r)
             st.session_state.asked_questions.append(st.session_state.pending_q)
+
+            actual_choice = "Time Out" if st.session_state.timed_out else st.session_state.pending_choice
+            st.session_state.user_choices.append(actual_choice)
             
             st.session_state.theta = estimate_ability(
                 st.session_state.admin_b, 
@@ -380,7 +418,10 @@ elif st.session_state.step == 'results':
         st.session_state.instrument, 
         rec, 
         theta, 
-        st.session_state.q_count
+        st.session_state.q_count,
+        st.session_state.asked_questions,
+        st.session_state.responses,
+        st.session_state.user_choices
     )
     
     st.download_button(
