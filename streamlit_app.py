@@ -2,6 +2,7 @@ import streamlit as st
 import math
 import tempfile
 import time
+import requests
 from datetime import datetime
 from fpdf import FPDF
 from questions import QUESTIONS 
@@ -233,13 +234,29 @@ elif st.session_state.step == 'choose_instrument':
         min_value=1, max_value=6, value=4
     )
     
-    if st.button("Start Assessment", use_container_width=True):
+   if st.button("Start Assessment", use_container_width=True):
         st.session_state.instrument = selected_inst
         st.session_state.initial_theta = float(self_estimate)
         st.session_state.theta = float(self_estimate)
         st.session_state.pool = [q for q in QUESTIONS if q['inst'] == selected_inst]
         st.session_state.step = 'testing'
         st.session_state.question_start_time = time.time()
+        
+        # --- SILENT AUDIT LOG PING ---
+        # PASTE YOUR SINGLE GOOGLE APPS SCRIPT WEB APP URL HERE:
+        webhook_url = "PASTE_YOUR_WEB_APP_URL_HERE"
+        
+        try:
+            audit_data = {
+                "name": st.session_state.candidate_name,
+                "location": st.session_state.location,
+                "instrument": selected_inst,
+                "level": self_estimate
+            }
+            requests.post(webhook_url, json=audit_data, timeout=2)
+        except:
+            pass        
+            
         st.rerun()
 
 # Screen 3: Three-Phase Testing with Timer & Feedback
