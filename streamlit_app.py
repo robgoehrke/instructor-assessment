@@ -19,22 +19,37 @@ def estimate_ability(administered_b, responses, prior_mean):
     best_theta = prior_mean 
     max_ll = -float('inf')
     
+    # Pre-zip once outside the loop instead of recreating it 81 times
+    items = list(zip(administered_b, responses))
+    
     for t in range(0, 81):
         theta = t / 10.0
-        ll = 0
-        for b, r in zip(administered_b, responses):
-            p = irt_probability(theta, b)
-            p = max(min(p, 1.0 - 1e-10), 1e-10) 
-            ll += r * math.log(p) + (1 - r) * math.log(1 - p)
-            
-        prior = -0.5 * ((theta - prior_mean)**2)
-        ll += prior
+        # Compute the prior penalty once per theta step
+        ll = -0.5 * ((theta - prior_mean) ** 2)
         
+        for b, r in items:
+            diff = -(theta - b)
+            # Inline bounded sigmoid to eliminate function call overhead and avoid overflow
+            if diff > 500:
+                p = 1e-10
+            elif diff < -500:
+                p = 1.0 - 1e-10
+            else:
+                p = 1.0 / (1.0 + math.exp(diff))
+                p = max(min(p, 1.0 - 1e-10), 1e-10)
+                
+            ll += r * math.log(p) + (1.0 - r) * math.log(1.0 - p)
+            
         if ll > max_ll:
             max_ll = ll
             best_theta = theta
             
     return best_theta
+
+# --- Cached Data Helper ---
+@st.cache_data
+def get_available_instruments():
+    return sorted(list(set(q["inst"] for q in QUESTIONS)))
 
 # --- 2. Branded PDF Generation Function ---
 def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, responses, choices):
@@ -176,10 +191,10 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
     pdf.set_text_color(150, 150, 150)
     pdf.cell(0, 10, "Generated securely by the Instructor Assessment System.", align="C")
     
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        pdf.output(tmp.name)
-        with open(tmp.name, "rb") as f:
-            return f.read()
+    pdf_output = pdf.output(dest='S')
+    if isinstance(pdf_output, str):
+        return pdf_output.encode('latin-1')
+    return bytes(pdf_output)
             
 # --- 3. Web Interface UI ---
 st.set_page_config(page_title="Instructor Assessment", page_icon="🎸")
@@ -243,7 +258,7 @@ if st.session_state.step == 'candidate_info':
 elif st.session_state.step == 'choose_instrument':
     st.write(f"Hi {st.session_state.candidate_name}! Let's set up your assessment.")
     
-    instruments = sorted(list(set(q["inst"] for q in QUESTIONS)))
+    instruments = get_available_instruments()
     
     # Starts blank, acts as a searchable dropdown
     selected_inst = st.selectbox(
@@ -484,33 +499,24 @@ elif st.session_state.step == 'results':
     st.write(f"Total Questions Answered: {st.session_state.q_count}")
     st.write("Please download your official results below and send the PDF to your recruiter to complete your application.")
     
-    pdf_bytes = create_pdf(
-        st.session_state.candidate_name, 
-        st.session_state.location, 
-        st.session_state.instrument, 
-        rec, 
-        theta, 
-        st.session_state.q_count,
-        st.session_state.asked_questions,
-        st.session_state.responses,
-        st.session_state.user_choices
-    )
+    # Generate once and preserve in session_state
+    if 'pdf_bytes' not in st.session_state:
+        st.session_state.pdf_bytes = create_pdf(
+            st.session_state.candidate_name, 
+            st.session_state.location, 
+            st.session_state.instrument, 
+            rec, 
+            theta, 
+            st.session_state.q_count, 
+            st.session_state.asked_questions, 
+            st.session_state.responses, 
+            st.session_state.user_choices
+        )
     
     st.download_button(
         label="📄 Download Results as PDF",
-        data=pdf_bytes,
+        data=st.session_state.pdf_bytes,
         file_name=f"{st.session_state.candidate_name}_Assessment_{st.session_state.instrument}.pdf",
         mime="application/pdf",
         use_container_width=True
     )
-    
-    st.write("---")
-    if st.button("Assess Another Instrument", use_container_width=True):
-        name_memory = st.session_state.candidate_name
-        loc_memory = st.session_state.location
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
-        st.session_state.candidate_name = name_memory
-        st.session_state.location = loc_memory
-        st.session_state.step = 'choose_instrument'
-        st.rerun()
