@@ -229,7 +229,14 @@ elif st.session_state.step == 'choose_instrument':
     st.write(f"Hi {st.session_state.candidate_name}! Let's set up your assessment.")
     
     instruments = sorted(list(set(q["inst"] for q in QUESTIONS)))
-    selected_inst = st.selectbox("Which instrument are you assessing?", instruments)
+    
+    # Starts blank, acts as a searchable dropdown
+    selected_inst = st.selectbox(
+        "Which instrument are you assessing?", 
+        instruments,
+        index=None,
+        placeholder="Start typing to search..."
+    )
     
     st.write("---")
     st.write("**Self-Assessment**")
@@ -239,34 +246,37 @@ elif st.session_state.step == 'choose_instrument':
     )
     
     if st.button("Start Assessment", use_container_width=True):
-        st.session_state.instrument = selected_inst
-        st.session_state.initial_theta = float(self_estimate)
-        st.session_state.theta = float(self_estimate)
-        st.session_state.pool = [q for q in QUESTIONS if q['inst'] == selected_inst]
-        st.session_state.step = 'testing'
-        st.session_state.question_start_time = time.time()
-        
-        # --- SILENT AUDIT LOG PING (BACKGROUND THREAD) ---
-        webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
-        
-        audit_data = {
-            "name": st.session_state.candidate_name,
-            "location": st.session_state.location,
-            "instrument": selected_inst,
-            "level": self_estimate
-        }
-        
-        def ping_google(url, data):
-            try:
-                requests.post(url, json=data, timeout=3)
-            except:
-                pass
-                
-        # Sends data instantly without freezing the app
-        threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
+        if selected_inst:
+            st.session_state.instrument = selected_inst
+            st.session_state.initial_theta = float(self_estimate)
+            st.session_state.theta = float(self_estimate)
+            st.session_state.pool = [q for q in QUESTIONS if q['inst'] == selected_inst]
+            st.session_state.step = 'testing'
+            st.session_state.question_start_time = time.time()
             
-        st.rerun()
-        
+            # --- SILENT AUDIT LOG PING (BACKGROUND THREAD) ---
+            webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
+            
+            audit_data = {
+                "name": st.session_state.candidate_name,
+                "location": st.session_state.location,
+                "instrument": selected_inst,
+                "level": self_estimate
+            }
+            
+            def ping_google(url, data):
+                try:
+                    requests.post(url, json=data, timeout=3)
+                except:
+                    pass
+                    
+            # Sends data instantly without freezing the app
+            threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
+                
+            st.rerun()
+        else:
+            st.error("Please select an instrument to continue.")
+            
 # Screen 3: Three-Phase Testing with Timer & Feedback
 elif st.session_state.step == 'testing':
     
