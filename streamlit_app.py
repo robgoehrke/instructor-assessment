@@ -3,9 +3,10 @@ import math
 import tempfile
 import time
 import requests
+import threading
 from datetime import datetime
 from fpdf import FPDF
-from questions import QUESTIONS 
+from questions import QUESTIONS
 
 # --- 1. IRT Probability & Estimation Models (Book-Scaled) ---
 def irt_probability(theta, b):
@@ -238,23 +239,26 @@ elif st.session_state.step == 'choose_instrument':
         st.session_state.step = 'testing'
         st.session_state.question_start_time = time.time()
         
-        # --- SILENT AUDIT LOG PING ---
-        # PASTE YOUR SINGLE GOOGLE APPS SCRIPT WEB APP URL HERE:
+        # --- SILENT AUDIT LOG PING (BACKGROUND THREAD) ---
         webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
         
-        try:
-            audit_data = {
-                "name": st.session_state.candidate_name,
-                "location": st.session_state.location,
-                "instrument": selected_inst,
-                "level": self_estimate
-            }
-            requests.post(webhook_url, json=audit_data, timeout=2)
-        except:
-            pass
-            
-        st.rerun()
+        audit_data = {
+            "name": st.session_state.candidate_name,
+            "location": st.session_state.location,
+            "instrument": selected_inst,
+            "level": self_estimate
+        }
         
+        def ping_google(url, data):
+            try:
+                requests.post(url, json=data, timeout=3)
+            except:
+                pass
+                
+        # Sends data instantly without freezing the app
+        threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
+            
+        st.rerun(        
 # Screen 3: Three-Phase Testing with Timer & Feedback
 elif st.session_state.step == 'testing':
     
