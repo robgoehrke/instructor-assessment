@@ -173,17 +173,13 @@ st.title("Instructor Assessment")
 st.markdown("""
     <style>
     /* Disables text selection and copying across the entire app */
-    body, .stApp {
+    div[data-testid="stAppViewContainer"] {
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
     }
     </style>
-    <script>
-    // Disables right-click menu
-    document.addEventListener('contextmenu', event => event.preventDefault());
-    </script>
 """, unsafe_allow_html=True)
 
 if 'step' not in st.session_state:
