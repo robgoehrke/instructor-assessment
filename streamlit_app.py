@@ -39,6 +39,21 @@ def estimate_ability(administered_b, responses, prior_mean):
 
 # --- 2. Branded PDF Generation Function ---
 def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, responses, choices):
+    # Helper to fix FPDF-incompatible characters (like ⅞, flats, sharps, smart quotes)
+    def clean_text(text):
+        if not isinstance(text, str): 
+            text = str(text)
+        replacements = {
+            '\u215e': '7/8', '\u215b': '1/8', '\u215c': '3/8', '\u215d': '5/8',
+            '\u2153': '1/3', '\u2154': '2/3', '\u266d': 'b', '\u266f': '#',
+            '\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"',
+            '\u2013': '-', '\u2014': '-', '\u2026': '...'
+        }
+        for k, v in replacements.items():
+            text = text.replace(k, v)
+        # Catch-all: replaces any remaining unsupported characters with a '?' so the app never crashes
+        return text.encode('latin-1', 'replace').decode('latin-1')
+
     pdf = FPDF()
     pdf.add_page()
     
@@ -69,17 +84,17 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
     pdf.set_font("Arial", '', 12)
     pdf.cell(40, 8, "Name:", 0, 0)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 8, name, 0, 1)
+    pdf.cell(0, 8, clean_text(name), 0, 1)
     
     pdf.set_font("Arial", '', 12)
     pdf.cell(40, 8, "Location:", 0, 0)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 8, f"School of Rock {location}", 0, 1)
+    pdf.cell(0, 8, clean_text(f"School of Rock {location}"), 0, 1)
     
     pdf.set_font("Arial", '', 12)
     pdf.cell(40, 8, "Instrument:", 0, 0)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 8, instrument, 0, 1)
+    pdf.cell(0, 8, clean_text(instrument), 0, 1)
     
     date_str = datetime.now().strftime("%B %d, %Y")
     pdf.set_font("Arial", '', 12)
@@ -104,7 +119,7 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
     pdf.cell(50, 10, "  RECOMMENDED LEVEL: ", 0, 0)
     pdf.set_text_color(220, 20, 60)
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, rec, 0, 1)
+    pdf.cell(0, 10, clean_text(rec), 0, 1)
     
     pdf.set_text_color(0, 0, 0)
     pdf.ln(10)
@@ -137,11 +152,11 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
             status = "Incorrect"
             
         pdf.set_font("Arial", 'B', 11)
-        pdf.multi_cell(0, 6, f"Q{i+1} (Level {int(q['diff'])}): {q['q']}")
+        pdf.multi_cell(0, 6, clean_text(f"Q{i+1} (Level {int(q['diff'])}): {q['q']}"))
         
         pdf.set_font("Arial", '', 10)
-        pdf.multi_cell(0, 6, f"Candidate Answer: {choice}")
-        pdf.multi_cell(0, 6, f"Correct Answer: {correct_ans_text}")
+        pdf.multi_cell(0, 6, clean_text(f"Candidate Answer: {choice}"))
+        pdf.multi_cell(0, 6, clean_text(f"Correct Answer: {correct_ans_text}"))
         
         if r > 0:
             pdf.set_text_color(34, 139, 34) # Green
