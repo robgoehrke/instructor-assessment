@@ -206,17 +206,24 @@ if st.session_state.step == 'candidate_info':
     st.write("Please enter your information to begin the assessment.")
     co_locations = ["Aurora", "Boulder", "Broomfield", "Centennial", "Colorado Springs", "Denver", "Littleton", "Longmont"]
     name = st.text_input("Full Name")
-    location = st.selectbox("Which School of Rock are you interviewing with?", co_locations)
+    
+    # Starts blank, acts as a searchable dropdown
+    location = st.selectbox(
+        "Which School of Rock are you interviewing with?", 
+        co_locations,
+        index=None,
+        placeholder="Start typing to search..."
+    )
     
     if st.button("Continue", use_container_width=True):
-        if name:
+        if name and location:
             st.session_state.candidate_name = name
             st.session_state.location = location
             st.session_state.step = 'choose_instrument'
             st.rerun()
         else:
-            st.error("Please enter your name.")
-
+            st.error("Please enter your name and select a location.")
+            
 # Screen 2: Choose Instrument & Self-Assessment
 elif st.session_state.step == 'choose_instrument':
     st.write(f"Hi {st.session_state.candidate_name}! Let's set up your assessment.")
