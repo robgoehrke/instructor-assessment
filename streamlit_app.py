@@ -116,7 +116,7 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
     
     pdf.set_y(pdf.get_y() + 5)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(50, 10, "  RECOMMENDED LEVEL: ", 0, 0)
+    pdf.cell(65, 10, "  RECOMMENDED LEVEL: ", 0, 0)
     pdf.set_text_color(220, 20, 60)
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, clean_text(rec), 0, 1)
