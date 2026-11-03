@@ -234,7 +234,7 @@ elif st.session_state.step == 'choose_instrument':
         min_value=1, max_value=6, value=4
     )
     
-   if st.button("Start Assessment", use_container_width=True):
+    if st.button("Start Assessment", use_container_width=True):
         st.session_state.instrument = selected_inst
         st.session_state.initial_theta = float(self_estimate)
         st.session_state.theta = float(self_estimate)
@@ -244,7 +244,7 @@ elif st.session_state.step == 'choose_instrument':
         
         # --- SILENT AUDIT LOG PING ---
         # PASTE YOUR SINGLE GOOGLE APPS SCRIPT WEB APP URL HERE:
-        webhook_url = "PASTE_YOUR_WEB_APP_URL_HERE"
+        webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
         
         try:
             audit_data = {
@@ -255,10 +255,10 @@ elif st.session_state.step == 'choose_instrument':
             }
             requests.post(webhook_url, json=audit_data, timeout=2)
         except:
-            pass        
+            pass
             
         st.rerun()
-
+        
 # Screen 3: Three-Phase Testing with Timer & Feedback
 elif st.session_state.step == 'testing':
     
