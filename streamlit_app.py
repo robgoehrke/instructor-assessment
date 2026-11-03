@@ -7,6 +7,7 @@ import threading
 from datetime import datetime
 from fpdf import FPDF
 from questions import QUESTIONS
+from locations import LOCATIONS
 
 # --- 1. IRT Probability & Estimation Models (Book-Scaled) ---
 def irt_probability(theta, b):
@@ -234,15 +235,14 @@ if 'step' not in st.session_state:
 # Screen 1: Candidate Info
 if st.session_state.step == 'candidate_info':
     st.write("Please enter your information to begin the assessment.")
-    co_locations = ["Aurora", "Boulder", "Broomfield", "Centennial", "Colorado Springs", "Denver", "Littleton", "Longmont"]
     name = st.text_input("Full Name")
     
-    # Starts blank, acts as a searchable dropdown
+    # Starts blank, acts as a searchable dropdown across all global locations
     location = st.selectbox(
         "Which School of Rock are you interviewing with?", 
-        co_locations,
+        LOCATIONS,
         index=None,
-        placeholder="Start typing to search..."
+        placeholder="Type state (e.g. 'CO') or city to search..."
     )
     
     if st.button("Continue", use_container_width=True):
