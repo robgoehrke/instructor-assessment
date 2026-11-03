@@ -198,21 +198,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Invisibly triggers the browser's native "Are you sure you want to leave?" warning
-components.html(
-    """
-    <script>
-    const parentWindow = window.parent || window;
-    parentWindow.addEventListener('beforeunload', function(e) {
-        e.preventDefault();
-        e.returnValue = '';
-    });
-    </script>
-    """,
-    height=0,
-    width=0,
-)
-
 if 'step' not in st.session_state:
     st.session_state.step = 'candidate_info'
     st.session_state.initial_theta = 4.0 
