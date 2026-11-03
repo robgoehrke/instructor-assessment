@@ -35,7 +35,7 @@ QUESTIONS = [
     # ---------------- BASS ----------------
     {"inst": "Bass", "diff": 2.0, "ans": 1, "q": "What are the intervals of the natural minor scale?", "opts": ["1, 2, b3, 4, 5, 6, b7", "1, 2, b3, 4, 5, b6, b7", "1, 2, b3, 4, 5, b6, 7", "1, 2, b3, 4, 5, 6, 7"]},
     {"inst": "Bass", "diff": 2.0, "ans": 2, "q": "What intervals are in an augmented triad?", "opts": ["1, 3, 5", "1, 3, 7", "1, 3, 5#", "1, b3, 5#"]},
-    {"inst": "Bass", "diff": 2.0, "ans": 1, "q": "Which of these chord progressions describes a I-vi-ii-V in the key of A?", "opts": ["A-Bm-F#m-D", "A-E-F#m-D", "E-C#m-F#m-B", "A-F#m-Bm-E"]},
+    {"inst": "Bass", "diff": 2.0, "ans": 3, "q": "Which of these chord progressions describes a I-vi-ii-V in the key of A?", "opts": ["A-Bm-F#m-D", "A-E-F#m-D", "E-C#m-F#m-B", "A-F#m-Bm-E"]},
     {"inst": "Bass", "diff": 2.0, "ans": 1, "q": "A common form of bass syncopation places some notes on the _______?", "opts": ["Downbeat.", "The 'and'.", "One.", "Kick drum."]},
     {"inst": "Bass", "diff": 2.0, "ans": 0, "q": "Which of these bass players exclusively played with a pick:", "opts": ["Carol Kaye and Lemmy", "Chris Squire and John Paul Jones", "John Entwhistle and Geddy Lee", "Les Claypool and Paul McCartney"]},
     
