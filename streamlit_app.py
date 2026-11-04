@@ -566,8 +566,7 @@ elif st.session_state.step == 'results':
     st.header("Assessment Complete!")
     theta = st.session_state.theta
     
-    # Use the mastery-checked recommendation stored in session_state
-   rec = st.session_state.get('recommendation', "Not Recommended")
+    rec = st.session_state.get('recommendation', "Not Recommended")
     
     if rec == "Not Recommended":
         st.error(f"**Assessment Outcome:** {rec}")
