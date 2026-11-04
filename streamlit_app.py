@@ -344,11 +344,16 @@ elif st.session_state.step == 'testing':
             st.session_state.phase = 'verification_target'
             
             theta = st.session_state.theta
-            if theta < 2.5: target_diff = 2.0
-            elif theta < 3.5: target_diff = 3.0
-            elif theta < 4.5: target_diff = 4.0
-            elif theta < 5.5: target_diff = 5.0
-            else: target_diff = 6.0
+            if theta < 2.5:
+                target_diff = 2.0
+            elif theta < 3.5:
+                target_diff = 3.0
+            elif theta < 4.5:
+                target_diff = 4.0
+            elif theta < 5.5:
+                target_diff = 5.0
+            else:
+                target_diff = 6.0
             
             st.session_state.target_diff = target_diff
             
@@ -381,7 +386,7 @@ elif st.session_state.step == 'testing':
                     
             st.session_state.verification_queue = queue
 
-       if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
+        if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
             # Recompute theta using all administered items
             final_b = [q['diff'] for q in st.session_state.asked_questions]
             final_r = st.session_state.responses
@@ -389,17 +394,15 @@ elif st.session_state.step == 'testing':
             st.session_state.theta = final_theta
             
             # --- MASTERY CHECK & RECOMMENDATION (80% Passing Threshold) ---
-            # Group performance by level
             level_stats = {}
             for q, r in zip(st.session_state.asked_questions, final_r):
                 d = q['diff']
                 if d not in level_stats:
                     level_stats[d] = {'correct': 0, 'total': 0}
                 level_stats[d]['total'] += 1
-                if r >= 0.5:  # consider partial/full credit
+                if r >= 0.5:
                     level_stats[d]['correct'] += 1
             
-            # Determine highest level with at least 80% passing rate
             assigned_level = 2
             for lvl in [2.0, 3.0, 4.0, 5.0, 6.0]:
                 if lvl in level_stats and level_stats[lvl]['total'] > 0:
@@ -407,17 +410,15 @@ elif st.session_state.step == 'testing':
                     if pct >= 0.8:
                         assigned_level = int(lvl)
                     else:
-                        # Candidate failed to hit the 80% threshold for this level; stop advancing
                         break
                 else:
-                    # If this level was never tested, do not advance beyond it
                     break
             
             rec = f"Book {assigned_level}"
             if assigned_level == 2:
                 rec = "Book 2 (or below)"
             st.session_state.recommendation = rec
-           
+
             # --- AUDIT LOG: COMPLETION ---
             webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
             
@@ -441,7 +442,7 @@ elif st.session_state.step == 'testing':
             st.session_state.step = 'results'
             st.rerun()
             st.stop()
-           
+            
     if st.session_state.phase == 'adaptive':
         current_q = min(st.session_state.pool, key=lambda x: abs(x['diff'] - st.session_state.theta))
         status_text = f"Assessment Phase - Question {st.session_state.q_count + 1}"
