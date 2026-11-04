@@ -1,3 +1,4 @@
 streamlit
 fpdf
 requests
+pyarrow<25
