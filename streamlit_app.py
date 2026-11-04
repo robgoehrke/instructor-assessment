@@ -4,6 +4,7 @@ import math
 import requests
 import threading
 import uuid
+from fpdf import FPDF
 from questions import QUESTIONS
 from locations import LOCATIONS
 
