@@ -202,17 +202,18 @@ st.set_page_config(page_title="Instructor Assessment", page_icon="🎸")
 st.title("Instructor Assessment")
 
 # --- ANTI-CHEATING SAFEGUARDS (Disable Copy/Paste/Highlight) ---
-st.markdown("""
-    <style>
-    /* Disables text selection and copying across the entire app */
-    div[data-testid="stAppViewContainer"] {
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-    }
-    </style>
-""", unsafe_allow_html=True)
+st.markdown(
+    """<style>
+/* Disables text selection and copying across the entire app */
+div[data-testid="stAppViewContainer"] {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+</style>""",
+    unsafe_allow_html=True,
+)
 
 if 'step' not in st.session_state:
     st.session_state.step = 'candidate_info'
