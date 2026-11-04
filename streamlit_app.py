@@ -331,7 +331,7 @@ elif st.session_state.step == 'instructions':
 
 # Screen 3: Three-Phase Testing with Timer & Feedback
 elif st.session_state.step == 'testing':
-    
+
     if not st.session_state.show_feedback:
         if st.session_state.phase == 'adaptive' and (st.session_state.q_count >= 7 or not st.session_state.pool):
             st.session_state.phase = 'verification_target'
@@ -347,7 +347,6 @@ elif st.session_state.step == 'testing':
             
             asked_texts = [q['q'] for q in st.session_state.asked_questions]
             target_qs = [q for q in QUESTIONS if q['inst'] == st.session_state.instrument and q['diff'] == target_diff]
-            
             st.session_state.verification_queue = [q for q in target_qs if q['q'] not in asked_texts]
 
         if st.session_state.phase == 'verification_target' and not st.session_state.verification_queue:
@@ -375,7 +374,7 @@ elif st.session_state.step == 'testing':
                     
             st.session_state.verification_queue = queue
 
-       if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
+        if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
             # --- AUDIT LOG: COMPLETION ---
             webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
             
