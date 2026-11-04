@@ -1,6 +1,5 @@
 import streamlit as st
 import time
-import math
 import requests
 import threading
 import uuid
@@ -9,48 +8,11 @@ from fpdf import FPDF
 from questions import QUESTIONS
 from locations import LOCATIONS
 
+# Ensure a stable session ID per user attempt
 if 'session_id' not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())[:8]
 
-# --- 1. IRT Probability & Estimation Models (Book-Scaled) ---
-def irt_probability(theta, b):
-    try:
-        return 1.0 / (1.0 + math.exp(-(theta - b)))
-    except OverflowError:
-        return 0.0 if (theta - b) < 0 else 1.0
-
-def estimate_ability(administered_b, responses, prior_mean):
-    best_theta = prior_mean 
-    max_ll = -float('inf')
-    items = list(zip(administered_b, responses))
-    
-    # After 4+ questions, candidate performance should completely overpower the self-estimate
-    prior_weight = 0.05 if len(items) >= 4 else 0.15
-    
-    for t in range(10, 65):  # Range 1.0 to 6.4 in steps of 0.1
-        theta = t / 10.0
-        # Gentle prior so self-assessment guides initial questions but doesn't trap the candidate
-        ll = -prior_weight * ((theta - prior_mean) ** 2)
-        
-        for b, r in items:
-            diff = -(theta - b)
-            if diff > 500:
-                p = 1e-10
-            elif diff < -500:
-                p = 1.0 - 1e-10
-            else:
-                p = 1.0 / (1.0 + math.exp(diff))
-                p = max(min(p, 1.0 - 1e-10), 1e-10)
-                
-            ll += r * math.log(p) + (1.0 - r) * math.log(1.0 - p)
-            
-        if ll > max_ll:
-            max_ll = ll
-            best_theta = theta
-            
-    return best_theta
-    
-# --- Cached Data Helper ---
+# --- 1. Cached Data Helper ---
 @st.cache_data
 def get_available_instruments():
     return sorted(list(set(q["inst"] for q in QUESTIONS)))
@@ -141,18 +103,18 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
     
     pdf.set_y(pdf.get_y() + 5)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(75, 10, "  RECOMMENDED LEVEL: ", 0, 0)
+    pdf.cell(75, 10, "RECOMMENDED LEVEL:", 0, 0)
     pdf.set_text_color(220, 20, 60)
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, clean_text(rec), 0, 1)
+    pdf.cell(0, 10, clean_text(f" {rec}"), 0, 1)
     
     pdf.set_text_color(0, 0, 0)
     pdf.ln(10)
     
     pdf.set_font("Arial", '', 12)
-    pdf.cell(50, 8, "Estimated IRT Score:", 0, 0)
+    pdf.cell(50, 8, "Highest Level Passed:", 0, 0)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 8, f"{score:.2f}", 0, 1)
+    pdf.cell(0, 8, f"{score:.0f}" if score >= 2 else "None", 0, 1)
     
     pdf.set_font("Arial", '', 12)
     pdf.cell(50, 8, "Questions Answered:", 0, 0)
@@ -206,8 +168,8 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
     if isinstance(pdf_output, str):
         return pdf_output.encode('latin-1')
     return bytes(pdf_output)
-            
-# --- 3. Web Interface UI ---
+
+# --- 3. Web Interface UI Configuration ---
 st.set_page_config(page_title="Instructor Assessment", page_icon="🎸")
 st.title("Instructor Assessment")
 
@@ -225,30 +187,33 @@ div[data-testid="stAppViewContainer"] {
     unsafe_allow_html=True,
 )
 
+# Initialize Session State
 if 'step' not in st.session_state:
     st.session_state.step = 'candidate_info'
-    st.session_state.initial_theta = 4.0 
-    st.session_state.theta = 4.0 
-    st.session_state.admin_b = []
-    st.session_state.responses = []
-    st.session_state.pool = []
+    st.session_state.current_level = 2.0
+    st.session_state.level_questions = []
+    st.session_state.level_index = 0
+    st.session_state.level_score = 0.0
+    st.session_state.level_attempts = 0
+    st.session_state.highest_passed_level = None
+    
     st.session_state.asked_questions = []
-    st.session_state.phase = 'adaptive'
-    st.session_state.verification_queue = []
+    st.session_state.responses = []
+    st.session_state.user_choices = []
     st.session_state.q_count = 0
+    
     st.session_state.show_feedback = False 
     st.session_state.pending_choice = None
     st.session_state.question_start_time = 0
     st.session_state.time_taken = 0
     st.session_state.timed_out = False
-    st.session_state.user_choices = []
 
 # Screen 1: Candidate Info
 if st.session_state.step == 'candidate_info':
     st.write("Please enter your information to begin the assessment.")
     name = st.text_input("Full Name")
     
-    # Starts blank, acts as a searchable dropdown across all global locations
+    # Searchable dropdown across all global locations
     location = st.selectbox(
         "Which School of Rock are you interviewing with?", 
         LOCATIONS,
@@ -265,13 +230,12 @@ if st.session_state.step == 'candidate_info':
         else:
             st.error("Please enter your name and select a location.")
             
-# Screen 2: Choose Instrument & Self-Assessment
+# Screen 2: Choose Instrument (Slider removed)
 elif st.session_state.step == 'choose_instrument':
-    st.write(f"Hi {st.session_state.candidate_name}! Let's set up your assessment.")
+    st.write(f"Hi {st.session_state.candidate_name}! Select the instrument you are interviewing to teach.")
     
     instruments = get_available_instruments()
     
-    # Starts blank, acts as a searchable dropdown
     selected_inst = st.selectbox(
         "Which instrument are you assessing?", 
         instruments,
@@ -279,19 +243,20 @@ elif st.session_state.step == 'choose_instrument':
         placeholder="Start typing to search..."
     )
     
-    st.write("---")
-    st.write("**Self-Assessment**")
-    self_estimate = st.slider(
-        "On a scale of 1 to 6, how would you rate your teaching ability on this instrument? (1 = Beginner, 6 = Advanced)", 
-        min_value=1, max_value=6, value=4
-    )
-    
     if st.button("Continue to Instructions", use_container_width=True):
         if selected_inst:
             st.session_state.instrument = selected_inst
-            st.session_state.initial_theta = float(self_estimate)
-            st.session_state.theta = float(self_estimate)
-            st.session_state.pool = [q for q in QUESTIONS if q['inst'] == selected_inst]
+            st.session_state.current_level = 2.0
+            
+            # Populate questions for baseline Level 2
+            st.session_state.level_questions = [
+                q for q in QUESTIONS 
+                if q['inst'] == selected_inst and q['diff'] == 2.0
+            ]
+            st.session_state.level_index = 0
+            st.session_state.level_score = 0.0
+            st.session_state.level_attempts = 0
+            
             st.session_state.step = 'instructions'
             st.rerun()
         else:
@@ -303,13 +268,14 @@ elif st.session_state.step == 'instructions':
     st.write("Please read the following guidelines carefully before beginning:")
     
     st.markdown("""
+    * **🪜 Progressive Benchmark Format:** All candidates start with foundational Book 2 questions. Achieving an 80% or higher score advances you to the next book level.
     * **⏱️ 20-Second Timer:** You have exactly 20 seconds to answer each question.
       * Answering under 10 seconds earns **100% credit**.
       * Answering between 10 and 20 seconds earns **partial credit**.
       * Running out of time counts as an **incorrect answer**.
     * **🔒 Security Measures:** Copying, pasting, right-clicking, and highlighting text are strictly disabled.
     * **⚠️ Do Not Refresh:** If you hit the back button, refresh the page, or close this tab, the test will lock you out, all progress will be permanently lost, and the system will record an incomplete attempt.
-    * **🤷 "I don't know" Option:** If you are truly stumped, select "I don't know" to skip the question without having to wait for the timer to run out.
+    * **🤷 "I don't know" Option:** If you are truly stumped, select "I don't know" to advance immediately without waiting for the timer to expire.
     """)
     
     st.warning("Ensure you have a stable internet connection and are ready to focus.")
@@ -326,7 +292,7 @@ elif st.session_state.step == 'instructions':
             "name": st.session_state.candidate_name,
             "location": st.session_state.location,
             "instrument": st.session_state.instrument,
-            "level": st.session_state.initial_theta,
+            "level": "Book 2 (Starting)",
             "questions_seen": 0,
             "status": "Started / In Progress"
         }
@@ -340,133 +306,85 @@ elif st.session_state.step == 'instructions':
         threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
         st.rerun()
         
-# Screen 3: Three-Phase Testing with Timer & Feedback
+# Screen 3: Progressive Benchmark Ladder Testing
 elif st.session_state.step == 'testing':
 
-    if not st.session_state.show_feedback:
-        if st.session_state.phase == 'adaptive' and (st.session_state.q_count >= 7 or not st.session_state.pool):
-            st.session_state.phase = 'verification_target'
+    # Check if candidate has completed all questions for the current level
+    if not st.session_state.show_feedback and st.session_state.level_index >= len(st.session_state.level_questions):
+        pass_rate = st.session_state.level_score / max(st.session_state.level_attempts, 1)
+        
+        if pass_rate >= 0.8:
+            # Candidate passed this level with 80%+
+            st.session_state.highest_passed_level = st.session_state.current_level
             
-            theta = st.session_state.theta
-            if theta < 2.5:
-                target_diff = 2.0
-            elif theta < 3.5:
-                target_diff = 3.0
-            elif theta < 4.5:
-                target_diff = 4.0
-            elif theta < 5.5:
-                target_diff = 5.0
+            # If they just conquered Level 6, conclude with Book 6
+            if st.session_state.current_level >= 6.0:
+                rec = "Book 6"
+                st.session_state.recommendation = rec
+                
+                webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
+                audit_data = {
+                    "session_id": st.session_state.session_id,
+                    "name": st.session_state.candidate_name,
+                    "location": st.session_state.location,
+                    "instrument": st.session_state.instrument,
+                    "level": "Book 6",
+                    "questions_seen": st.session_state.q_count,
+                    "status": f"Completed - {rec}"
+                }
+                def ping_google(url, data):
+                    try: requests.post(url, json=data, timeout=3)
+                    except: pass
+                threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
+                
+                st.session_state.step = 'results'
+                st.rerun()
+                st.stop()
             else:
-                target_diff = 6.0
-            
-            st.session_state.target_diff = target_diff
-            
-            asked_texts = [q['q'] for q in st.session_state.asked_questions]
-            target_qs = [q for q in QUESTIONS if q['inst'] == st.session_state.instrument and q['diff'] == target_diff]
-            st.session_state.verification_queue = [q for q in target_qs if q['q'] not in asked_texts]
-            
-            # If all target questions were already asked in Phase 1, auto-advance phase
-            if not st.session_state.verification_queue:
-                st.session_state.phase = 'verification_prior'
-
-        if st.session_state.phase == 'verification_target' and not st.session_state.verification_queue:
-            st.session_state.phase = 'verification_prior'
-            target_diff = st.session_state.target_diff
-            second_diff = target_diff - 1.0
-            
-            queue = []
-            if second_diff >= 2.0:
-                asked_texts = [q['q'] for q in st.session_state.asked_questions]
-                second_qs = [q for q in QUESTIONS if q['inst'] == st.session_state.instrument and q['diff'] == second_diff]
-                
-                target_correct = sum(r for q, r in zip(st.session_state.asked_questions, st.session_state.responses) if q['diff'] == target_diff)
-                target_total = sum(1 for q in st.session_state.asked_questions if q['diff'] == target_diff)
-                asked_second_count = sum(1 for q in st.session_state.asked_questions if q['diff'] == second_diff)
-                
-                if target_total > 0 and (target_correct / target_total) < 0.8:
-                    needed = len(second_qs) - asked_second_count
-                else:
-                    needed = 3 - asked_second_count
-                    
-                if needed > 0:
-                    unasked_second = [q for q in second_qs if q['q'] not in asked_texts]
-                    queue.extend(unasked_second[:needed])
-                    
-            st.session_state.verification_queue = queue
-
-        if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
-            # Recompute theta using all administered items
-            final_b = [q['diff'] for q in st.session_state.asked_questions]
-            final_r = st.session_state.responses
-            final_theta = estimate_ability(final_b, final_r, st.session_state.initial_theta)
-            st.session_state.theta = final_theta
-            
-            # --- MASTERY CHECK & RECOMMENDATION (80% Passing Threshold) ---
-            level_stats = {}
-            for q, r in zip(st.session_state.asked_questions, final_r):
-                d = q['diff']
-                if d not in level_stats:
-                    level_stats[d] = {'correct': 0, 'total': 0}
-                level_stats[d]['total'] += 1
-                if r >= 0.5:
-                    level_stats[d]['correct'] += 1
-            
-            # If they fail to hit 80% on Level 2, they are Not Recommended
-            assigned_level = None
-            for lvl in [2.0, 3.0, 4.0, 5.0, 6.0]:
-                if lvl in level_stats and level_stats[lvl]['total'] > 0:
-                    pct = level_stats[lvl]['correct'] / level_stats[lvl]['total']
-                    if pct >= 0.8:
-                        assigned_level = int(lvl)
-                    else:
-                        # Did not pass this level; stop advancing
-                        break
-                else:
-                    break
-            
-            if assigned_level is None:
+                # Advance to next tier
+                st.session_state.current_level += 1.0
+                st.session_state.level_questions = [
+                    q for q in QUESTIONS 
+                    if q['inst'] == st.session_state.instrument and q['diff'] == st.session_state.current_level
+                ]
+                st.session_state.level_index = 0
+                st.session_state.level_score = 0.0
+                st.session_state.level_attempts = 0
+                st.rerun()
+                st.stop()
+        else:
+            # Failed 80% benchmark; test halts here
+            if st.session_state.highest_passed_level is None:
                 rec = "Not Recommended"
             else:
-                rec = f"Book {assigned_level}"
+                rec = f"Book {int(st.session_state.highest_passed_level)}"
                 
             st.session_state.recommendation = rec
             
-           # --- AUDIT LOG: COMPLETION ---
             webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
-            
             audit_data = {
                 "session_id": st.session_state.session_id,
                 "name": st.session_state.candidate_name,
                 "location": st.session_state.location,
                 "instrument": st.session_state.instrument,
-                "level": st.session_state.initial_theta,
+                "level": f"Stopped at Book {int(st.session_state.current_level)}",
                 "questions_seen": st.session_state.q_count,
                 "status": f"Completed - {rec}"
             }
-            
             def ping_google(url, data):
-                try:
-                    requests.post(url, json=data, timeout=3)
-                except:
-                    pass
-                    
+                try: requests.post(url, json=data, timeout=3)
+                except: pass
             threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
-
+            
             st.session_state.step = 'results'
             st.rerun()
             st.stop()
-            
-    if st.session_state.phase == 'adaptive':
-        current_q = min(st.session_state.pool, key=lambda x: abs(x['diff'] - st.session_state.theta))
-        status_text = f"Assessment Phase - Question {st.session_state.q_count + 1}"
-    else: 
-        current_q = st.session_state.verification_queue[0]
-        status_text = f"Verification Phase - {len(st.session_state.verification_queue)} left"
-        
-    st.subheader(status_text)
+
+    current_q = st.session_state.level_questions[st.session_state.level_index]
+    
+    st.subheader(f"Book {int(st.session_state.current_level)} Evaluation — Question {st.session_state.level_index + 1} of {len(st.session_state.level_questions)}")
     
     if not st.session_state.show_feedback:
-        
         st.markdown("""
         <style>
         .timer-progress {
@@ -520,7 +438,7 @@ elif st.session_state.step == 'testing':
         st.write(current_q['q'])
         
         if st.session_state.timed_out:
-            st.error(f"**⏰ Out of Time!** You took longer than 20 seconds. This counts as an incorrect answer.")
+            st.error("**⏰ Out of Time!** You took longer than 20 seconds. This counts as an incorrect answer.")
             st.info(f"The correct answer was: **{st.session_state.correct_text}**")
         elif st.session_state.pending_r > 0:
             credit_pct = int(st.session_state.pending_r * 100)
@@ -538,25 +456,18 @@ elif st.session_state.step == 'testing':
             st.info(f"The correct answer was: **{st.session_state.correct_text}**")
             
         if st.button("Next Question", use_container_width=True):
-            st.session_state.admin_b.append(st.session_state.pending_b)
             st.session_state.responses.append(st.session_state.pending_r)
             st.session_state.asked_questions.append(st.session_state.pending_q)
 
             actual_choice = "Time Out" if st.session_state.timed_out else st.session_state.pending_choice
             st.session_state.user_choices.append(actual_choice)
             
-            st.session_state.theta = estimate_ability(
-                st.session_state.admin_b, 
-                st.session_state.responses,
-                st.session_state.initial_theta
-            )
-            
-            if st.session_state.phase == 'adaptive':
-                st.session_state.pool.remove(st.session_state.pending_q)
-            else:
-                st.session_state.verification_queue.pop(0)
-                
+            # Tally score for current level batch (qualifies if credit >= 50%)
+            st.session_state.level_score += (1.0 if st.session_state.pending_r >= 0.5 else 0.0)
+            st.session_state.level_attempts += 1
+            st.session_state.level_index += 1
             st.session_state.q_count += 1
+            
             st.session_state.show_feedback = False 
             st.session_state.question_start_time = time.time()
             st.rerun()
@@ -564,7 +475,6 @@ elif st.session_state.step == 'testing':
 # Screen 4: Results & PDF Download
 elif st.session_state.step == 'results':
     st.header("Assessment Complete!")
-    theta = st.session_state.theta
     
     rec = st.session_state.get('recommendation', "Not Recommended")
     
@@ -579,12 +489,13 @@ elif st.session_state.step == 'results':
     
     # Generate once and preserve in session_state
     if 'pdf_bytes' not in st.session_state:
+        display_score = float(st.session_state.highest_passed_level) if st.session_state.highest_passed_level else 1.0
         st.session_state.pdf_bytes = create_pdf(
             st.session_state.candidate_name, 
             st.session_state.location, 
             st.session_state.instrument, 
             rec, 
-            theta, 
+            display_score, 
             st.session_state.q_count, 
             st.session_state.asked_questions, 
             st.session_state.responses, 
