@@ -1,13 +1,14 @@
 import streamlit as st
-import math
-import tempfile
 import time
+import math
 import requests
 import threading
-from datetime import datetime
-from fpdf import FPDF
+import uuid
 from questions import QUESTIONS
 from locations import LOCATIONS
+
+if 'session_id' not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())[:8]
 
 # --- 1. IRT Probability & Estimation Models (Book-Scaled) ---
 def irt_probability(theta, b):
@@ -319,6 +320,7 @@ elif st.session_state.step == 'instructions':
         webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
         
         audit_data = {
+            "session_id": st.session_state.session_id,
             "name": st.session_state.candidate_name,
             "location": st.session_state.location,
             "instrument": st.session_state.instrument,
@@ -335,7 +337,7 @@ elif st.session_state.step == 'instructions':
                 
         threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
         st.rerun()
-
+        
 # Screen 3: Three-Phase Testing with Timer & Feedback
 elif st.session_state.step == 'testing':
 
@@ -419,10 +421,11 @@ elif st.session_state.step == 'testing':
                 rec = "Book 2 (or below)"
             st.session_state.recommendation = rec
 
-            # --- AUDIT LOG: COMPLETION ---
+           # --- AUDIT LOG: COMPLETION ---
             webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
             
             audit_data = {
+                "session_id": st.session_state.session_id,
                 "name": st.session_state.candidate_name,
                 "location": st.session_state.location,
                 "instrument": st.session_state.instrument,
