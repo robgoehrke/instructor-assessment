@@ -304,29 +304,31 @@ elif st.session_state.step == 'instructions':
     
     st.warning("Ensure you have a stable internet connection and are ready to focus.")
     
-    if st.button("Start Assessment", type="primary", use_container_width=True):
-        st.session_state.step = 'testing'
+   if st.button("Start Assessment", type="primary", use_container_width=True):
+        st.session_state.step = "testing"
         st.session_state.question_start_time = time.time()
-        
-        # --- SILENT AUDIT LOG PING (BACKGROUND THREAD) ---
+
+        # --- AUDIT LOG: INITIAL START ---
         webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
-        
+
         audit_data = {
             "name": st.session_state.candidate_name,
             "location": st.session_state.location,
             "instrument": st.session_state.instrument,
-            "level": st.session_state.initial_theta
+            "level": st.session_state.initial_theta,
+            "questions_seen": 0,
+            "status": "Started / In Progress",
         }
-        
+
         def ping_google(url, data):
             try:
                 requests.post(url, json=data, timeout=3)
             except:
                 pass
-                
-        # Sends data instantly without freezing the app
-        threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
-            
+
+        threading.Thread(
+            target=ping_google, args=(webhook_url, audit_data)
+        ).start()
         st.rerun()
         
 # Screen 3: Three-Phase Testing with Timer & Feedback
@@ -375,7 +377,27 @@ elif st.session_state.step == 'testing':
                     
             st.session_state.verification_queue = queue
 
-        if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
+       if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
+            # --- AUDIT LOG: COMPLETION ---
+            webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
+            
+            audit_data = {
+                "name": st.session_state.candidate_name,
+                "location": st.session_state.location,
+                "instrument": st.session_state.instrument,
+                "level": st.session_state.initial_theta,
+                "questions_seen": st.session_state.q_count,
+                "status": "Completed"
+            }
+            
+            def ping_google(url, data):
+                try:
+                    requests.post(url, json=data, timeout=3)
+                except:
+                    pass
+                    
+            threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
+
             st.session_state.step = 'results'
             st.rerun()
             st.stop()
