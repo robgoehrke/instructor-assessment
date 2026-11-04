@@ -292,7 +292,6 @@ elif st.session_state.step == 'instructions':
             "name": st.session_state.candidate_name,
             "location": st.session_state.location,
             "instrument": st.session_state.instrument,
-            "level": "Book 2 (Starting)",
             "questions_seen": 0,
             "status": "Started / In Progress"
         }
@@ -328,7 +327,6 @@ elif st.session_state.step == 'testing':
                     "name": st.session_state.candidate_name,
                     "location": st.session_state.location,
                     "instrument": st.session_state.instrument,
-                    "level": "Book 6",
                     "questions_seen": st.session_state.q_count,
                     "status": f"Completed - {rec}"
                 }
@@ -367,7 +365,6 @@ elif st.session_state.step == 'testing':
                 "name": st.session_state.candidate_name,
                 "location": st.session_state.location,
                 "instrument": st.session_state.instrument,
-                "level": f"Stopped at Book {int(st.session_state.current_level)}",
                 "questions_seen": st.session_state.q_count,
                 "status": f"Completed - {rec}"
             }
