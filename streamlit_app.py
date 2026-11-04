@@ -19,18 +19,18 @@ def irt_probability(theta, b):
 def estimate_ability(administered_b, responses, prior_mean):
     best_theta = prior_mean 
     max_ll = -float('inf')
-    
-    # Pre-zip once outside the loop instead of recreating it 81 times
     items = list(zip(administered_b, responses))
     
-    for t in range(0, 81):
+    # After 4+ questions, candidate performance should completely overpower the self-estimate
+    prior_weight = 0.05 if len(items) >= 4 else 0.15
+    
+    for t in range(10, 65):  # Range 1.0 to 6.4 in steps of 0.1
         theta = t / 10.0
-        # Compute the prior penalty once per theta step
-        ll = -0.15 * ((theta - prior_mean) ** 2)
+        # Gentle prior so self-assessment guides initial questions but doesn't trap the candidate
+        ll = -prior_weight * ((theta - prior_mean) ** 2)
         
         for b, r in items:
             diff = -(theta - b)
-            # Inline bounded sigmoid to eliminate function call overhead and avoid overflow
             if diff > 500:
                 p = 1e-10
             elif diff < -500:
@@ -46,7 +46,7 @@ def estimate_ability(administered_b, responses, prior_mean):
             best_theta = theta
             
     return best_theta
-
+    
 # --- Cached Data Helper ---
 @st.cache_data
 def get_available_instruments():
@@ -381,7 +381,43 @@ elif st.session_state.step == 'testing':
                     
             st.session_state.verification_queue = queue
 
-        if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
+       if st.session_state.phase == 'verification_prior' and not st.session_state.verification_queue:
+            # Recompute theta using all administered items
+            final_b = [q['diff'] for q in st.session_state.asked_questions]
+            final_r = st.session_state.responses
+            final_theta = estimate_ability(final_b, final_r, st.session_state.initial_theta)
+            st.session_state.theta = final_theta
+            
+            # --- MASTERY CHECK & RECOMMENDATION (80% Passing Threshold) ---
+            # Group performance by level
+            level_stats = {}
+            for q, r in zip(st.session_state.asked_questions, final_r):
+                d = q['diff']
+                if d not in level_stats:
+                    level_stats[d] = {'correct': 0, 'total': 0}
+                level_stats[d]['total'] += 1
+                if r >= 0.5:  # consider partial/full credit
+                    level_stats[d]['correct'] += 1
+            
+            # Determine highest level with at least 80% passing rate
+            assigned_level = 2
+            for lvl in [2.0, 3.0, 4.0, 5.0, 6.0]:
+                if lvl in level_stats and level_stats[lvl]['total'] > 0:
+                    pct = level_stats[lvl]['correct'] / level_stats[lvl]['total']
+                    if pct >= 0.8:
+                        assigned_level = int(lvl)
+                    else:
+                        # Candidate failed to hit the 80% threshold for this level; stop advancing
+                        break
+                else:
+                    # If this level was never tested, do not advance beyond it
+                    break
+            
+            rec = f"Book {assigned_level}"
+            if assigned_level == 2:
+                rec = "Book 2 (or below)"
+            st.session_state.recommendation = rec
+           
             # --- AUDIT LOG: COMPLETION ---
             webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
             
@@ -391,7 +427,7 @@ elif st.session_state.step == 'testing':
                 "instrument": st.session_state.instrument,
                 "level": st.session_state.initial_theta,
                 "questions_seen": st.session_state.q_count,
-                "status": "Completed"
+                "status": f"Completed - {rec}"
             }
             
             def ping_google(url, data):
@@ -405,7 +441,7 @@ elif st.session_state.step == 'testing':
             st.session_state.step = 'results'
             st.rerun()
             st.stop()
-            
+           
     if st.session_state.phase == 'adaptive':
         current_q = min(st.session_state.pool, key=lambda x: abs(x['diff'] - st.session_state.theta))
         status_text = f"Assessment Phase - Question {st.session_state.q_count + 1}"
