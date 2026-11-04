@@ -26,7 +26,7 @@ def estimate_ability(administered_b, responses, prior_mean):
     for t in range(0, 81):
         theta = t / 10.0
         # Compute the prior penalty once per theta step
-        ll = -0.5 * ((theta - prior_mean) ** 2)
+        ll = -0.15 * ((theta - prior_mean) ** 2)
         
         for b, r in items:
             diff = -(theta - b)
@@ -54,14 +54,21 @@ def get_available_instruments():
 
 # --- 2. Branded PDF Generation Function ---
 def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, responses, choices):
-    # Helper to fix FPDF-incompatible characters (like ⅞, flats, sharps, smart quotes)
+    # Helper to fix FPDF-incompatible characters (fractions, musical symbols, smart quotes, dashes)
     def clean_text(text):
-        if not isinstance(text, str): 
+        if not isinstance(text, str):
             text = str(text)
         replacements = {
+            # Fractions
+            '\u00be': '3/4', '\u00bd': '1/2', '\u00bc': '1/4',
             '\u215e': '7/8', '\u215b': '1/8', '\u215c': '3/8', '\u215d': '5/8',
-            '\u2153': '1/3', '\u2154': '2/3', '\u266d': 'b', '\u266f': '#',
+            '\u2153': '1/3', '\u2154': '2/3',
+            # Musical Accidentals
+            '\u266d': 'b', '\u266f': '#', '♭': 'b', '♯': '#',
+            # Smart Quotes & Apostrophes
             '\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"',
+            '`': "'",
+            # Dashes & Ellipses
             '\u2013': '-', '\u2014': '-', '\u2026': '...'
         }
         for k, v in replacements.items():
@@ -104,7 +111,7 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
     pdf.set_font("Arial", '', 12)
     pdf.cell(40, 8, "Location:", 0, 0)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 8, clean_text(f"School of Rock {location}"), 0, 1)
+    pdf.cell(0, 8, clean_text(f"School of Rock - {location}"), 0, 1)
     
     pdf.set_font("Arial", '', 12)
     pdf.cell(40, 8, "Instrument:", 0, 0)
