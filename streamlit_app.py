@@ -4,6 +4,7 @@ import math
 import requests
 import threading
 import uuid
+from datetime import datetime
 from fpdf import FPDF
 from questions import QUESTIONS
 from locations import LOCATIONS
@@ -140,7 +141,7 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
     
     pdf.set_y(pdf.get_y() + 5)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(65, 10, "  RECOMMENDED LEVEL: ", 0, 0)
+    pdf.cell(75, 10, "  RECOMMENDED LEVEL: ", 0, 0)
     pdf.set_text_color(220, 20, 60)
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, clean_text(rec), 0, 1)
@@ -363,6 +364,10 @@ elif st.session_state.step == 'testing':
             asked_texts = [q['q'] for q in st.session_state.asked_questions]
             target_qs = [q for q in QUESTIONS if q['inst'] == st.session_state.instrument and q['diff'] == target_diff]
             st.session_state.verification_queue = [q for q in target_qs if q['q'] not in asked_texts]
+            
+            # If all target questions were already asked in Phase 1, auto-advance phase
+            if not st.session_state.verification_queue:
+                st.session_state.phase = 'verification_prior'
 
         if st.session_state.phase == 'verification_target' and not st.session_state.verification_queue:
             st.session_state.phase = 'verification_prior'
@@ -406,22 +411,26 @@ elif st.session_state.step == 'testing':
                 if r >= 0.5:
                     level_stats[d]['correct'] += 1
             
-            assigned_level = 2
+            # If they fail to hit 80% on Level 2, they are Not Recommended
+            assigned_level = None
             for lvl in [2.0, 3.0, 4.0, 5.0, 6.0]:
                 if lvl in level_stats and level_stats[lvl]['total'] > 0:
                     pct = level_stats[lvl]['correct'] / level_stats[lvl]['total']
                     if pct >= 0.8:
                         assigned_level = int(lvl)
                     else:
+                        # Did not pass this level; stop advancing
                         break
                 else:
                     break
             
-            rec = f"Book {assigned_level}"
-            if assigned_level == 2:
-                rec = "Book 2 (or below)"
+            if assigned_level is None:
+                rec = "Not Recommended"
+            else:
+                rec = f"Book {assigned_level}"
+                
             st.session_state.recommendation = rec
-
+            
            # --- AUDIT LOG: COMPLETION ---
             webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
             
@@ -557,13 +566,15 @@ elif st.session_state.step == 'results':
     st.header("Assessment Complete!")
     theta = st.session_state.theta
     
-    if theta < 2.5: rec = "Book 2 (or below)"
-    elif theta < 3.5: rec = "Book 3"
-    elif theta < 4.5: rec = "Book 4"
-    elif theta < 5.5: rec = "Book 5"
-    else: rec = "Book 6"
+    # Use the mastery-checked recommendation stored in session_state
+   rec = st.session_state.get('recommendation', "Not Recommended")
     
-    st.success(f"**Recommended Level:** {rec}")
+    if rec == "Not Recommended":
+        st.error(f"**Assessment Outcome:** {rec}")
+        st.warning("The candidate did not meet the baseline 80% threshold for Book 2 instruction.")
+    else:
+        st.success(f"**Recommended Level:** {rec}")
+        
     st.write(f"Total Questions Answered: {st.session_state.q_count}")
     st.write("Please download your official results below and send the PDF to your recruiter to complete your application.")
     
