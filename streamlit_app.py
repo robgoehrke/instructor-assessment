@@ -1,5 +1,7 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import time
+import re
 import requests
 import threading
 import uuid
@@ -12,33 +14,42 @@ from locations import LOCATIONS
 if 'session_id' not in st.session_state:
     st.session_state.session_id = str(uuid.uuid4())[:8]
 
-# --- 1. Cached Data Helper ---
+# --- 1. Cached Data & Text Helpers ---
 @st.cache_data
 def get_available_instruments():
     return sorted(list(set(q["inst"] for q in QUESTIONS)))
 
+def highlight_keywords(text):
+    """Bolds key music theory terms and musical symbols for rapid visual scannability."""
+    patterns = [
+        r'\b(major|minor|diminished|augmented|dominant|pentatonic|blues|chromatic|modal|modes|ionian|dorian|phrygian|lydian|mixolydian|aeolian|locrian)\b',
+        r'\b(triad|triads|chord|chords|progression|interval|intervals|scale|scales|arpeggio|arpeggios|octave|octaves|unison|root|inversion|inversions)\b',
+        r'\b(sharp|sharps|flat|flats|natural|key signature|tempo|rhythm|time signature|syncopation|triplet|triplets|staccato|legato|vibrato|melisma|clave|onset)\b',
+        r'\b(perfect fifth|perfect fourth|major third|minor third|major seventh|minor seventh|tritone|half step|whole step|semitone|tone)\b',
+        r'\b([A-G][#b♯♭]?(?:maj|min|m|dim|aug|sus|add)?[0-9]?)\b'
+    ]
+    for pat in patterns:
+        text = re.sub(pat, r'**\1**', text, flags=re.IGNORECASE)
+    # Clean up any accidental double-bolding
+    text = text.replace('****', '**')
+    return text
+
 # --- 2. Branded PDF Generation Function ---
 def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, responses, choices):
-    # Helper to fix FPDF-incompatible characters (fractions, musical symbols, smart quotes, dashes)
     def clean_text(text):
         if not isinstance(text, str):
             text = str(text)
         replacements = {
-            # Fractions
             '\u00be': '3/4', '\u00bd': '1/2', '\u00bc': '1/4',
             '\u215e': '7/8', '\u215b': '1/8', '\u215c': '3/8', '\u215d': '5/8',
             '\u2153': '1/3', '\u2154': '2/3',
-            # Musical Accidentals
             '\u266d': 'b', '\u266f': '#', '♭': 'b', '♯': '#',
-            # Smart Quotes & Apostrophes
             '\u2018': "'", '\u2019': "'", '\u201c': '"', '\u201d': '"',
             '`': "'",
-            # Dashes & Ellipses
             '\u2013': '-', '\u2014': '-', '\u2026': '...'
         }
         for k, v in replacements.items():
             text = text.replace(k, v)
-        # Catch-all: replaces any remaining unsupported characters with a '?' so the app never crashes
         return text.encode('latin-1', 'replace').decode('latin-1')
 
     pdf = FPDF()
@@ -134,7 +145,7 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
         correct_ans_text = q['opts'][q['ans']]
         
         if r > 0:
-            status = f"Correct ({int(r*100)}% credit)"
+            status = "Correct"
         else:
             status = "Incorrect"
             
@@ -146,9 +157,9 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
         pdf.multi_cell(0, 6, clean_text(f"Correct Answer: {correct_ans_text}"))
         
         if r > 0:
-            pdf.set_text_color(34, 139, 34) # Green
+            pdf.set_text_color(34, 139, 34)
         else:
-            pdf.set_text_color(220, 20, 60) # Red
+            pdf.set_text_color(220, 20, 60)
             
         pdf.cell(0, 6, f"Result: {status}", ln=True)
         
@@ -169,23 +180,85 @@ def create_pdf(name, location, instrument, rec, score, q_count, asked_qs, respon
         return pdf_output.encode('latin-1')
     return bytes(pdf_output)
 
-# --- 3. Web Interface UI Configuration ---
+# --- 3. Web Interface UI Configuration & ADHD-Friendly Styling ---
 st.set_page_config(page_title="Instructor Assessment", page_icon="🎸")
-st.title("Instructor Assessment")
 
-# --- ANTI-CHEATING SAFEGUARDS (Disable Copy/Paste/Highlight) ---
 st.markdown(
     """<style>
-/* Disables text selection and copying across the entire app */
+/* Anti-cheating: disable text selection and copying */
 div[data-testid="stAppViewContainer"] {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
 }
+
+/* Generous spacing, larger readable text, and clean click targets for option buttons */
+div.stButton > button {
+    padding: 0.85rem 1.2rem !important;
+    margin-bottom: 0.45rem !important;
+    border-radius: 10px !important;
+    font-size: 1.08rem !important;
+    line-height: 1.45 !important;
+    transition: transform 0.08s ease, box-shadow 0.12s ease;
+}
+div.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+/* Visual Level Stepper Banner */
+.stepper-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    margin: 10px 0 20px 0;
+}
+.step-pill {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background-color: #f0f2f6;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+}
+.step-pill.done {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+.step-pill.active {
+    background-color: #dc143c;
+    color: #ffffff;
+    border-color: #b01030;
+    box-shadow: 0 2px 6px rgba(220,20,60,0.25);
+}
+
+/* Clean Instruction Callout Cards */
+.info-card {
+    background-color: #f8f9fa;
+    border-left: 4px solid #dc143c;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+.info-card-title {
+    font-weight: 700;
+    font-size: 1.02rem;
+    margin-bottom: 2px;
+}
+.info-card-body {
+    font-size: 0.94rem;
+    color: #333;
+}
 </style>""",
     unsafe_allow_html=True,
 )
+
+st.title("Instructor Assessment")
 
 # Initialize Session State
 if 'step' not in st.session_state:
@@ -196,6 +269,7 @@ if 'step' not in st.session_state:
     st.session_state.level_score = 0.0
     st.session_state.level_attempts = 0
     st.session_state.highest_passed_level = None
+    st.session_state.hide_timer = False
     
     st.session_state.asked_questions = []
     st.session_state.responses = []
@@ -208,12 +282,29 @@ if 'step' not in st.session_state:
     st.session_state.time_taken = 0
     st.session_state.timed_out = False
 
+WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
+
+def send_audit_log(status_text):
+    audit_data = {
+        "session_id": st.session_state.session_id,
+        "name": st.session_state.candidate_name,
+        "location": st.session_state.location,
+        "instrument": st.session_state.instrument,
+        "questions_seen": st.session_state.q_count,
+        "status": status_text
+    }
+    def ping_google(url, data):
+        try:
+            requests.post(url, json=data, timeout=3)
+        except:
+            pass
+    threading.Thread(target=ping_google, args=(WEBHOOK_URL, audit_data)).start()
+
 # Screen 1: Candidate Info
 if st.session_state.step == 'candidate_info':
-    st.write("Please enter your information to begin the assessment.")
+    st.write("Enter your details below to get started.")
     name = st.text_input("Full Name")
     
-    # Searchable dropdown across all global locations
     location = st.selectbox(
         "Which School of Rock are you interviewing with?", 
         LOCATIONS,
@@ -221,7 +312,7 @@ if st.session_state.step == 'candidate_info':
         placeholder="Type state (e.g. 'CO') or city to search..."
     )
     
-    if st.button("Continue", use_container_width=True):
+    if st.button("Continue", type="primary", use_container_width=True):
         if name and location:
             st.session_state.candidate_name = name
             st.session_state.location = location
@@ -230,25 +321,24 @@ if st.session_state.step == 'candidate_info':
         else:
             st.error("Please enter your name and select a location.")
             
-# Screen 2: Choose Instrument (Slider removed)
+# Screen 2: Choose Instrument
 elif st.session_state.step == 'choose_instrument':
-    st.write(f"Hi {st.session_state.candidate_name}! Select the instrument you are interviewing to teach.")
+    st.write(f"Hi **{st.session_state.candidate_name}**! Select the instrument you are interviewing to teach.")
     
     instruments = get_available_instruments()
     
     selected_inst = st.selectbox(
-        "Which instrument are you assessing?", 
+        "Instrument", 
         instruments,
         index=None,
         placeholder="Start typing to search..."
     )
     
-    if st.button("Continue to Instructions", use_container_width=True):
+    if st.button("Continue to Quick Briefing", type="primary", use_container_width=True):
         if selected_inst:
             st.session_state.instrument = selected_inst
             st.session_state.current_level = 2.0
             
-            # Populate questions for baseline Level 2
             st.session_state.level_questions = [
                 q for q in QUESTIONS 
                 if q['inst'] == selected_inst and q['diff'] == 2.0
@@ -262,84 +352,85 @@ elif st.session_state.step == 'choose_instrument':
         else:
             st.error("Please select an instrument to continue.")
 
-# Screen 2.5: Instructions & Security Briefing
+# Screen 2.5: Chunked Instructions & Focus Preferences
 elif st.session_state.step == 'instructions':
-    st.header("Assessment Instructions")
-    st.write("Please read the following guidelines carefully before beginning:")
+    st.header("Quick Briefing")
     
     st.markdown("""
-    * **🪜 Progressive Benchmark Format:** All candidates start with foundational Book 2 questions. Achieving an 80% or higher score advances you to the next book level.
-    * **⏱️ 20-Second Timer:** You have exactly 20 seconds to answer each question.
-      * Answering under 10 seconds earns **100% credit**.
-      * Answering between 10 and 20 seconds earns **partial credit**.
-      * Running out of time counts as an **incorrect answer**.
-    * **🔒 Security Measures:** Copying, pasting, right-clicking, and highlighting text are strictly disabled.
-    * **⚠️ Do Not Refresh:** If you hit the back button, refresh the page, or close this tab, the test will lock you out, all progress will be permanently lost, and the system will record an incomplete attempt.
-    * **🤷 "I don't know" Option:** If you are truly stumped, select "I don't know" to advance immediately without waiting for the timer to expire.
-    """)
+    <div class="info-card">
+        <div class="info-card-title">🪜 Step-by-Step Levels</div>
+        <div class="info-card-body">Everyone starts at <b>Book 2</b> (5 questions). Score <b>80% or higher</b> to unlock the next book level, with a breather screen between every tier.</div>
+    </div>
+    <div class="info-card">
+        <div class="info-card-title">⏱️ 30-Second Pacing</div>
+        <div class="info-card-body">You have <b>30 seconds</b> per question for full credit. Select <b>"I don't know"</b> anytime to skip without waiting.</div>
+    </div>
+    <div class="info-card">
+        <div class="info-card-title">🔒 Focus & Integrity</div>
+        <div class="info-card-body">Copy/paste is disabled. Avoid refreshing or closing this tab while active so your session stays intact.</div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    st.warning("Ensure you have a stable internet connection and are ready to focus.")
+    st.write("")
+    st.session_state.hide_timer = st.toggle(
+        "🧘 Hide visual countdown bar (shows only a subtle 5-second heads-up before time expires)",
+        value=st.session_state.hide_timer
+    )
     
-    if st.button("Start Assessment", type="primary", use_container_width=True):
+    st.write("")
+    if st.button("Start Book 2", type="primary", use_container_width=True):
         st.session_state.step = 'testing'
         st.session_state.question_start_time = time.time()
-        
-        # --- AUDIT LOG: INITIAL START ---
-        webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
-        
-        audit_data = {
-            "session_id": st.session_state.session_id,
-            "name": st.session_state.candidate_name,
-            "location": st.session_state.location,
-            "instrument": st.session_state.instrument,
-            "questions_seen": 0,
-            "status": "Started / In Progress"
-        }
-        
-        def ping_google(url, data):
-            try:
-                requests.post(url, json=data, timeout=3)
-            except:
-                pass
-                
-        threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
+        send_audit_log("Started / In Progress")
         st.rerun()
-        
+
+# Screen 3.5: Sensory Reset / Level-Up Breather Screen
+elif st.session_state.step == 'level_break':
+    completed_lvl = int(st.session_state.highest_passed_level)
+    next_lvl = int(st.session_state.current_level)
+    
+    st.success(f"🎉 **Book {completed_lvl} Mastered!** You hit the 80%+ benchmark.")
+    st.header(f"Up Next: Book {next_lvl}")
+    st.write("Take a deep breath, stretch your shoulders, or grab a sip of water. The clock will not start until you click the button below.")
+    
+    st.write("")
+    if st.button(f"Start Book {next_lvl} (5 Questions) ➔", type="primary", use_container_width=True):
+        st.session_state.step = 'testing'
+        st.session_state.question_start_time = time.time()
+        st.rerun()
+
 # Screen 3: Progressive Benchmark Ladder Testing
 elif st.session_state.step == 'testing':
+
+    # Accidental Back/Refresh Guard (Browser beforeunload warning)
+    components.html(
+        """
+        <script>
+        window.parent.addEventListener('beforeunload', function (e) {
+            e.preventDefault();
+            e.returnValue = '';
+        });
+        </script>
+        """,
+        height=0,
+    )
 
     # Check if candidate has completed all questions for the current level
     if not st.session_state.show_feedback and st.session_state.level_index >= len(st.session_state.level_questions):
         pass_rate = st.session_state.level_score / max(st.session_state.level_attempts, 1)
         
         if pass_rate >= 0.8:
-            # Candidate passed this level with 80%+
             st.session_state.highest_passed_level = st.session_state.current_level
             
-            # If they just conquered Level 6, conclude with Book 6
             if st.session_state.current_level >= 6.0:
                 rec = "Book 6"
                 st.session_state.recommendation = rec
-                
-                webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
-                audit_data = {
-                    "session_id": st.session_state.session_id,
-                    "name": st.session_state.candidate_name,
-                    "location": st.session_state.location,
-                    "instrument": st.session_state.instrument,
-                    "questions_seen": st.session_state.q_count,
-                    "status": f"Completed - {rec}"
-                }
-                def ping_google(url, data):
-                    try: requests.post(url, json=data, timeout=3)
-                    except: pass
-                threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
-                
+                send_audit_log(f"Completed - {rec}")
                 st.session_state.step = 'results'
                 st.rerun()
                 st.stop()
             else:
-                # Advance to next tier
+                # Prepare next tier and route to breather screen
                 st.session_state.current_level += 1.0
                 st.session_state.level_questions = [
                     q for q in QUESTIONS 
@@ -348,78 +439,106 @@ elif st.session_state.step == 'testing':
                 st.session_state.level_index = 0
                 st.session_state.level_score = 0.0
                 st.session_state.level_attempts = 0
+                
+                send_audit_log(f"In Progress - Passed Book {int(st.session_state.highest_passed_level)}")
+                st.session_state.step = 'level_break'
                 st.rerun()
                 st.stop()
         else:
-            # Failed 80% benchmark; test halts here
             if st.session_state.highest_passed_level is None:
                 rec = "Not Recommended"
             else:
                 rec = f"Book {int(st.session_state.highest_passed_level)}"
                 
             st.session_state.recommendation = rec
-            
-            webhook_url = "https://script.google.com/macros/s/AKfycbwZ1HRRtZhpSdBvBBnt6Lg_2zthN2hMhku0BasBBn2t9a6KejVPefdYB_fkSMNkTFySlw/exec"
-            audit_data = {
-                "session_id": st.session_state.session_id,
-                "name": st.session_state.candidate_name,
-                "location": st.session_state.location,
-                "instrument": st.session_state.instrument,
-                "questions_seen": st.session_state.q_count,
-                "status": f"Completed - {rec}"
-            }
-            def ping_google(url, data):
-                try: requests.post(url, json=data, timeout=3)
-                except: pass
-            threading.Thread(target=ping_google, args=(webhook_url, audit_data)).start()
+            send_audit_log(f"Completed - {rec}")
             
             st.session_state.step = 'results'
             st.rerun()
             st.stop()
 
+    # Visual Level Stepper Banner
+    cur_lvl = int(st.session_state.current_level)
+    pills_html = '<div class="stepper-container">'
+    for lvl in [2, 3, 4, 5, 6]:
+        if lvl < cur_lvl:
+            cls = "step-pill done"
+            label = f"✓ Book {lvl}"
+        elif lvl == cur_lvl:
+            cls = "step-pill active"
+            label = f"Book {lvl}"
+        else:
+            cls = "step-pill"
+            label = f"Book {lvl}"
+        pills_html += f'<div class="{cls}">{label}</div>'
+    pills_html += '</div>'
+    st.markdown(pills_html, unsafe_allow_html=True)
+
     current_q = st.session_state.level_questions[st.session_state.level_index]
-    
-    st.subheader(f"Book {int(st.session_state.current_level)} Evaluation — Question {st.session_state.level_index + 1} of {len(st.session_state.level_questions)}")
+    st.subheader(f"Book {cur_lvl} — Question {st.session_state.level_index + 1} of {len(st.session_state.level_questions)}")
     
     if not st.session_state.show_feedback:
-        st.markdown("""
-        <style>
-        .timer-progress {
-            height: 8px; border-radius: 4px;
-            animation: countdown 20s linear forwards;
-        }
-        @keyframes countdown {
-            0% { width: 100%; background-color: #28a745; }
-            50% { width: 50%; background-color: #ffc107; }
-            80% { background-color: #dc3545; }
-            100% { width: 0%; background-color: #dc3545; }
-        }
-        </style>
-        <div style="width: 100%; height: 8px; background-color: #ddd; border-radius: 4px; margin-bottom: 20px;">
-            <div class="timer-progress"></div>
-        </div>
-        <p style="font-size: 0.8em; color: gray; margin-top: -15px;">20 seconds to answer (faster = higher score)</p>
-        """, unsafe_allow_html=True)
+        if not st.session_state.hide_timer:
+            st.markdown("""
+            <style>
+            .timer-progress {
+                height: 8px; border-radius: 4px;
+                animation: countdown 30s linear forwards;
+            }
+            @keyframes countdown {
+                0% { width: 100%; background-color: #28a745; }
+                50% { width: 50%; background-color: #28a745; }
+                83% { width: 17%; background-color: #ffc107; }
+                100% { width: 0%; background-color: #dc3545; }
+            }
+            </style>
+            <div style="width: 100%; height: 8px; background-color: #ddd; border-radius: 4px; margin-bottom: 18px;">
+                <div class="timer-progress"></div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <style>
+            .five-sec-warning {
+                opacity: 0;
+                max-height: 0;
+                overflow: hidden;
+                background-color: #fff3cd;
+                color: #856404;
+                border-left: 4px solid #ffc107;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 0.95rem;
+                animation: showWarning 0.4s ease-out 25s forwards;
+            }
+            @keyframes showWarning {
+                to {
+                    opacity: 1;
+                    max-height: 60px;
+                    padding: 8px 14px;
+                    margin-bottom: 16px;
+                }
+            }
+            </style>
+            <div class="five-sec-warning">⏳ 5 seconds remaining — lock in your best guess!</div>
+            """, unsafe_allow_html=True)
         
-        st.write(f"**(Level {int(current_q['diff'])})** {current_q['q']}")
+        # Render question with keyword highlighting and larger typography
+        formatted_q = highlight_keywords(current_q['q'])
+        st.markdown(f"<div style='font-size: 1.22rem; line-height: 1.5; margin-bottom: 16px;'>{formatted_q}</div>", unsafe_allow_html=True)
+        
         display_options = current_q['opts'] + ["I don't know"]
         
         for idx, opt in enumerate(display_options):
             if st.button(opt, use_container_width=True):
                 time_taken = time.time() - st.session_state.question_start_time
                 
-                if time_taken > 20:
+                if time_taken > 30:
                     is_correct = 0.0
                     st.session_state.timed_out = True
                 else:
                     st.session_state.timed_out = False
-                    if idx == current_q['ans']:
-                        if time_taken <= 10:
-                            is_correct = 1.0
-                        else:
-                            is_correct = 1.0 - 0.5 * ((time_taken - 10) / 10)
-                    else:
-                        is_correct = 0.0
+                    is_correct = 1.0 if idx == current_q['ans'] else 0.0
                 
                 st.session_state.pending_b = current_q['diff']
                 st.session_state.pending_r = is_correct
@@ -432,35 +551,30 @@ elif st.session_state.step == 'testing':
                 st.rerun()
                 
     else:
-        st.write(current_q['q'])
+        st.markdown(f"<div style='font-size: 1.15rem; margin-bottom: 12px;'>{highlight_keywords(current_q['q'])}</div>", unsafe_allow_html=True)
         
         if st.session_state.timed_out:
-            st.error("**⏰ Out of Time!** You took longer than 20 seconds. This counts as an incorrect answer.")
-            st.info(f"The correct answer was: **{st.session_state.correct_text}**")
+            st.error("**⏰ Out of Time!** Over 30 seconds elapsed, so this counts as incorrect.")
+            st.info(f"Correct answer: **{st.session_state.correct_text}**")
         elif st.session_state.pending_r > 0:
-            credit_pct = int(st.session_state.pending_r * 100)
             seconds = int(st.session_state.time_taken)
-            st.success(f"**Correct!** That was a Level {int(current_q['diff'])} question.")
-            if credit_pct == 100:
-                st.info(f"⏱️ Lightning fast! You answered in {seconds} seconds and earned **100% credit**.")
-            else:
-                st.warning(f"⏱️ You answered in {seconds} seconds, earning **{credit_pct}% credit**.")
+            st.success(f"**Correct!** Answered in **{seconds}s**.")
         elif st.session_state.pending_choice == "I don't know":
-            st.warning(f"**No worries.** That was a Level {int(current_q['diff'])} question.")
-            st.info(f"For your knowledge, the correct answer is: **{st.session_state.correct_text}**")
+            st.warning("**Skipped.** Good call moving forward.")
+            st.info(f"Correct answer: **{st.session_state.correct_text}**")
         else:
-            st.error(f"**Incorrect.** That was a Level {int(current_q['diff'])} question.")
-            st.info(f"The correct answer was: **{st.session_state.correct_text}**")
+            st.error("**Incorrect.**")
+            st.info(f"Correct answer: **{st.session_state.correct_text}**")
             
-        if st.button("Next Question", use_container_width=True):
+        st.write("")
+        if st.button("Next Question ➔", type="primary", use_container_width=True):
             st.session_state.responses.append(st.session_state.pending_r)
             st.session_state.asked_questions.append(st.session_state.pending_q)
 
             actual_choice = "Time Out" if st.session_state.timed_out else st.session_state.pending_choice
             st.session_state.user_choices.append(actual_choice)
             
-            # Tally score for current level batch (qualifies if credit >= 50%)
-            st.session_state.level_score += (1.0 if st.session_state.pending_r >= 0.5 else 0.0)
+            st.session_state.level_score += st.session_state.pending_r
             st.session_state.level_attempts += 1
             st.session_state.level_index += 1
             st.session_state.q_count += 1
@@ -481,10 +595,9 @@ elif st.session_state.step == 'results':
     else:
         st.success(f"**Recommended Level:** {rec}")
         
-    st.write(f"Total Questions Answered: {st.session_state.q_count}")
-    st.write("Please download your official results below and send the PDF to your recruiter to complete your application.")
+    st.write(f"Total Questions Answered: **{st.session_state.q_count}**")
+    st.write("Download your official results below and send the PDF to your recruiter to complete your application.")
     
-    # Generate once and preserve in session_state
     if 'pdf_bytes' not in st.session_state:
         display_score = float(st.session_state.highest_passed_level) if st.session_state.highest_passed_level else 1.0
         st.session_state.pdf_bytes = create_pdf(
@@ -499,10 +612,14 @@ elif st.session_state.step == 'results':
             st.session_state.user_choices
         )
     
+    st.write("")
     st.download_button(
         label="📄 Download Results as PDF",
         data=st.session_state.pdf_bytes,
         file_name=f"{st.session_state.candidate_name}_Assessment_{st.session_state.instrument}.pdf",
         mime="application/pdf",
+        type="primary",
         use_container_width=True
     )
+
+```
