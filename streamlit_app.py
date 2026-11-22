@@ -364,7 +364,7 @@ elif st.session_state.step == 'instructions':
     </div>
     <div class="info-card">
         <div class="info-card-title">⏱️ 30-Second Pacing</div>
-        <div class="info-card-body">You have <b>30 seconds</b> per question for full credit. Select <b>"I don't know"</b> anytime to skip without waiting.</div>
+        <div class="info-card-body">You have <b>30 seconds</b> per question. Select <b>"I don't know"</b> anytime to skip without waiting.</div>
     </div>
     <div class="info-card">
         <div class="info-card-title">🔒 Focus & Integrity</div>
