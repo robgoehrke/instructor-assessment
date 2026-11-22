@@ -657,5 +657,3 @@ elif st.session_state.step == 'results':
         type="primary",
         use_container_width=True
     )
-
-```
