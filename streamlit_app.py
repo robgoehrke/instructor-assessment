@@ -19,19 +19,23 @@ if 'session_id' not in st.session_state:
 def get_available_instruments():
     return sorted(list(set(q["inst"] for q in QUESTIONS)))
 
+def sync_timer_toggle():
+    st.session_state.hide_timer = not st.session_state.hide_timer
+
 def highlight_keywords(text):
-    """Bolds key music theory terms and musical symbols for rapid visual scannability."""
+    """Wraps key music theory terms in HTML <strong> tags for clean visual scannability."""
     patterns = [
+        r'\b((?:major|minor|harmonic minor|melodic minor|major pentatonic|minor pentatonic|pentatonic|blues|chromatic|whole tone)\s+(?:scale|scales|triad|triads|chord|chords|arpeggio|arpeggios|key|keys|interval|intervals|third|seventh))\b',
+        r'\b(perfect fifth|perfect fourth|major third|minor third|major seventh|minor seventh|tritone|half step|whole step|semitone|tone)\b',
         r'\b(major|minor|diminished|augmented|dominant|pentatonic|blues|chromatic|modal|modes|ionian|dorian|phrygian|lydian|mixolydian|aeolian|locrian)\b',
         r'\b(triad|triads|chord|chords|progression|interval|intervals|scale|scales|arpeggio|arpeggios|octave|octaves|unison|root|inversion|inversions)\b',
         r'\b(sharp|sharps|flat|flats|natural|key signature|tempo|rhythm|time signature|syncopation|triplet|triplets|staccato|legato|vibrato|melisma|clave|onset)\b',
-        r'\b(perfect fifth|perfect fourth|major third|minor third|major seventh|minor seventh|tritone|half step|whole step|semitone|tone)\b',
         r'\b([A-G][#b♯♭]?(?:maj|min|m|dim|aug|sus|add)?[0-9]?)\b'
     ]
     for pat in patterns:
-        text = re.sub(pat, r'**\1**', text, flags=re.IGNORECASE)
-    # Clean up any accidental double-bolding
-    text = text.replace('****', '**')
+        text = re.sub(pat, r'<strong>\1</strong>', text, flags=re.IGNORECASE)
+    # Clean up any nested <strong> tags
+    text = re.sub(r'<strong>([^<]*)<strong>([^<]*)</strong>([^<]*)</strong>', r'<strong>\1\2\3</strong>', text)
     return text
 
 # --- 2. Branded PDF Generation Function ---
@@ -237,7 +241,7 @@ div.stButton > button:hover {
     box-shadow: 0 2px 6px rgba(220,20,60,0.25);
 }
 
-/* Clean Instruction Callout Cards */
+/* Clean Instruction Callout Cards with High-Contrast Dark Text */
 .info-card {
     background-color: #f8f9fa;
     border-left: 4px solid #dc143c;
@@ -300,6 +304,22 @@ def send_audit_log(status_text):
         except:
             pass
     threading.Thread(target=ping_google, args=(WEBHOOK_URL, audit_data)).start()
+
+# Background 1-second timer monitor to auto-lock out on timeout
+@st.fragment(run_every=1)
+def monitor_timeout(current_q):
+    if st.session_state.step == 'testing' and not st.session_state.show_feedback:
+        elapsed = time.time() - st.session_state.question_start_time
+        if elapsed >= 30.0:
+            st.session_state.timed_out = True
+            st.session_state.pending_b = current_q['diff']
+            st.session_state.pending_r = 0.0
+            st.session_state.pending_q = current_q
+            st.session_state.pending_choice = "Time Out"
+            st.session_state.correct_text = current_q['opts'][current_q['ans']]
+            st.session_state.time_taken = elapsed
+            st.session_state.show_feedback = True
+            st.rerun()
 
 # Screen 1: Candidate Info
 if st.session_state.step == 'candidate_info':
@@ -364,7 +384,7 @@ elif st.session_state.step == 'instructions':
     </div>
     <div class="info-card">
         <div class="info-card-title">⏱️ 30-Second Pacing</div>
-        <div class="info-card-body">You have <b>30 seconds</b> per question. Select <b>"I don't know"</b> anytime to skip without waiting.</div>
+        <div class="info-card-body">You have <b>30 seconds</b> per question. When time runs out, the question locks automatically. Select <b>"I don't know"</b> anytime to skip without waiting.</div>
     </div>
     <div class="info-card">
         <div class="info-card-title">🔒 Focus & Integrity</div>
@@ -373,9 +393,10 @@ elif st.session_state.step == 'instructions':
     """, unsafe_allow_html=True)
     
     st.write("")
-    st.session_state.hide_timer = st.toggle(
-        "🧘 Hide visual countdown bar (shows only a 10-second heads-up before time expires)",
-        value=st.session_state.hide_timer
+    st.toggle(
+        "🧘 Hide visual countdown bar (shows only a subtle 10-second heads-up before time expires)",
+        value=st.session_state.hide_timer,
+        on_change=sync_timer_toggle
     )
     
     st.write("")
@@ -403,7 +424,7 @@ elif st.session_state.step == 'level_break':
 # Screen 3: Progressive Benchmark Ladder Testing
 elif st.session_state.step == 'testing':
 
-    # Accidental Back/Refresh Guard (Browser beforeunload warning)
+    # Accidental Back/Refresh Guard
     components.html(
         """
         <script>
@@ -431,7 +452,6 @@ elif st.session_state.step == 'testing':
                 st.rerun()
                 st.stop()
             else:
-                # Prepare next tier and route to breather screen
                 st.session_state.current_level += 1.0
                 st.session_state.level_questions = [
                     q for q in QUESTIONS 
@@ -479,28 +499,43 @@ elif st.session_state.step == 'testing':
     st.subheader(f"Book {cur_lvl} — Question {st.session_state.level_index + 1} of {len(st.session_state.level_questions)}")
     
     if not st.session_state.show_feedback:
+        # Start live 1-second background timeout check
+        monitor_timeout(current_q)
+
+        # Persistent timer visibility toggle
+        st.toggle(
+            "🧘 Hide visual countdown bar",
+            value=st.session_state.hide_timer,
+            key=f"timer_toggle_{st.session_state.q_count}",
+            on_change=sync_timer_toggle
+        )
+
+        elapsed = max(0.0, time.time() - st.session_state.question_start_time)
+
         if not st.session_state.hide_timer:
-            st.markdown("""
+            st.markdown(f"""
             <style>
-            .timer-progress {
+            .timer-progress {{
                 height: 8px; border-radius: 4px;
-                animation: countdown 30s linear forwards;
-            }
-            @keyframes countdown {
-                0% { width: 100%; background-color: #28a745; }
-                50% { width: 50%; background-color: #28a745; }
-                83% { width: 17%; background-color: #ffc107; }
-                100% { width: 0%; background-color: #dc3545; }
-            }
+                animation: countdown 30s linear -{elapsed:.2f}s forwards;
+            }}
+            @keyframes countdown {{
+                0% {{ width: 100%; background-color: #28a745; }}
+                50% {{ width: 50%; background-color: #28a745; }}
+                67% {{ width: 33%; background-color: #ffc107; }}
+                100% {{ width: 0%; background-color: #dc3545; }}
+            }}
             </style>
             <div style="width: 100%; height: 8px; background-color: #ddd; border-radius: 4px; margin-bottom: 18px;">
                 <div class="timer-progress"></div>
             </div>
             """, unsafe_allow_html=True)
         else:
-            st.markdown("""
+            # 10-second warning (triggers at the 20s mark, accounting for already elapsed time)
+            warning_delay = 20.0 - elapsed
+            st.markdown(f"""
             <style>
-            .ten-sec-warning {
+            .ten-sec-warning {{
                 opacity: 0;
                 max-height: 0;
                 overflow: hidden;
@@ -510,21 +545,21 @@ elif st.session_state.step == 'testing':
                 border-radius: 6px;
                 font-weight: 600;
                 font-size: 0.95rem;
-                animation: showWarning 0.4s ease-out 25s forwards;
-            }
-            @keyframes showWarning {
-                to {
+                animation: showWarning 0.4s ease-out {warning_delay:.2f}s forwards;
+            }}
+            @keyframes showWarning {{
+                to {{
                     opacity: 1;
                     max-height: 60px;
                     padding: 8px 14px;
                     margin-bottom: 16px;
-                }
-            }
+                }}
+            }}
             </style>
-            <div class="ten-sec-warning">⏳ 10 seconds remaining — choose your best guess!</div>
+            <div class="ten-sec-warning">⏳ 10 seconds remaining — lock in your best guess!</div>
             """, unsafe_allow_html=True)
         
-        # Render question with keyword highlighting and larger typography
+        # Render question with clean HTML <strong> keyword highlighting
         formatted_q = highlight_keywords(current_q['q'])
         st.markdown(f"<div style='font-size: 1.22rem; line-height: 1.5; margin-bottom: 16px;'>{formatted_q}</div>", unsafe_allow_html=True)
         
@@ -555,7 +590,7 @@ elif st.session_state.step == 'testing':
         st.markdown(f"<div style='font-size: 1.15rem; margin-bottom: 12px;'>{highlight_keywords(current_q['q'])}</div>", unsafe_allow_html=True)
         
         if st.session_state.timed_out:
-            st.error("**⏰ Out of Time!** Over 30 seconds elapsed, so this counts as incorrect.")
+            st.error("**⏰ Time's Up!** The 30-second limit expired before an answer was selected, so this question was locked and marked incorrect.")
             st.info(f"Correct answer: **{st.session_state.correct_text}**")
         elif st.session_state.pending_r > 0:
             seconds = int(st.session_state.time_taken)
@@ -622,3 +657,5 @@ elif st.session_state.step == 'results':
         type="primary",
         use_container_width=True
     )
+
+```
