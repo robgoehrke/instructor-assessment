@@ -247,12 +247,13 @@ div.stButton > button:hover {
 }
 .info-card-title {
     font-weight: 700;
-    font-size: 1.02rem;
-    margin-bottom: 2px;
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+    color: #111111 !important;
 }
 .info-card-body {
-    font-size: 0.94rem;
-    color: #333;
+    font-size: 0.95rem;
+    color: #222222 !important;
 }
 </style>""",
     unsafe_allow_html=True,
@@ -373,7 +374,7 @@ elif st.session_state.step == 'instructions':
     
     st.write("")
     st.session_state.hide_timer = st.toggle(
-        "🧘 Hide visual countdown bar (shows only a subtle 5-second heads-up before time expires)",
+        "🧘 Hide visual countdown bar (shows only a 10-second heads-up before time expires)",
         value=st.session_state.hide_timer
     )
     
