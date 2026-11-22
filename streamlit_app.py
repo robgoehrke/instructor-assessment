@@ -500,7 +500,7 @@ elif st.session_state.step == 'testing':
         else:
             st.markdown("""
             <style>
-            .five-sec-warning {
+            .ten-sec-warning {
                 opacity: 0;
                 max-height: 0;
                 overflow: hidden;
@@ -521,7 +521,7 @@ elif st.session_state.step == 'testing':
                 }
             }
             </style>
-            <div class="five-sec-warning">⏳ 5 seconds remaining — lock in your best guess!</div>
+            <div class="ten-sec-warning">⏳ 10 seconds remaining — choose your best guess!</div>
             """, unsafe_allow_html=True)
         
         # Render question with keyword highlighting and larger typography
